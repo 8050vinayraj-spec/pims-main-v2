@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Respond to Offer{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header" style="background-color: {% if decision.result == 'SELECTED' %}#16A34A{% elif decision.result == 'REJECTED' %}#DC2626{% else %}#F59E0B{% endif %}; color: white;">
+                    <h5 class="mb-0">Respond to {{ opportunity.title }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-{% if decision.result == 'SELECTED' %}success{% elif decision.result == 'REJECTED' %}danger{% else %}warning{% endif %} mb-4">
+                        <strong>Hiring Decision: {{ decision.get_result_display }}</strong>
+                        {% if decision.comments %}
+                            <p class="mb-0 mt-2">{{ decision.comments }}</p>
+                        {% endif %}
+                    </div>
+
+                    {% if is_student %}
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.response.id_for_label }}" class="form-label">Your Response *</label>
+                            {{ form.response }}
+                            {% if form.response.errors %}
+                                <div class="invalid-feedback d-block">{{ form.response.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.comments.id_for_label }}" class="form-label">Comments</label>
+                            {{ form.comments }}
+                            {% if form.comments.errors %}
+                                <div class="invalid-feedback d-block">{{ form.comments.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'dashboard:student-dashboard' %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Submit Response</button>
+                        </div>
+                    </form>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        Student response is pending. Current status: 
+                        {% if form.instance.response %}
+                            <strong>{{ form.instance.get_response_display }}</strong>
+                        {% else %}
+                            <strong>No response yet</strong>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

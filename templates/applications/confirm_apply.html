@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Apply - PIMS{% endblock %}
+
+{% block page_title %}Apply{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Confirm Application</h5>
+                </div>
+                <div class="card-body">
+                    <p>Are you sure you want to apply to this opportunity?</p>
+                    <p><strong>Title:</strong> {{ opportunity.title }}</p>
+                    <p><strong>Company:</strong> {{ opportunity.company.name }}</p>
+
+                    <form method="POST">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary w-100 mb-2">Apply Now</button>
+                        <a href="{% url 'opportunity_detail' opportunity.id %}" class="btn btn-secondary w-100">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

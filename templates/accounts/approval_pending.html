@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Account Approval Pending - PIMS{% endblock %}
+
+{% block page_title %}Account Approval Pending{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card text-center">
+                <div class="card-body p-5">
+                    <div style="font-size: 48px; color: #f59e0b; margin-bottom: 20px;">⏳</div>
+                    <h3 class="mb-3">Account Pending Approval</h3>
+                    <p class="text-muted mb-4">
+                        Your account has been created successfully, but it's awaiting approval from the officer. 
+                        You'll receive a notification once your account is approved.
+                    </p>
+                    <p class="text-muted small">
+                        This usually takes 1-2 business days.
+                    </p>
+                    
+                    <a href="{% url 'login' %}" class="btn btn-secondary mt-3">Back to Login</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}PIMS - Placement & Internship Management System{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #3B82F6;
+            --primary-dark: #1E40AF;
+            --secondary: #10B981;
+            --danger: #EF4444;
+            --warning: #F59E0B;
+            --light: #F9FAFB;
+            --dark: #1F2937;
+            --border: #E5E7EB;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%);
+            color: var(--dark);
+            margin: 0;
+            padding: 0;
+        }
+
+        .sidebar {
+            background: linear-gradient(180deg, #1F2937 0%, #111827 100%);
+            min-height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 260px;
+            color: white;
+            padding: 25px 20px;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            z-index: 1000;
+        }
+
+        .sidebar .brand {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 35px;
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar .brand::before {
+            content: '🎓';
+            font-size: 28px;
+        }
+
+        .sidebar-section {
+            margin-bottom: 25px;
+        }
+
+        .sidebar-section-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 15px;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .sidebar a:hover {
+            background-color: rgba(59, 130, 246, 0.2);
+            color: white;
+            padding-left: 20px;
+        }
+
+        .sidebar a.active {
+            background: linear-gradient(90deg, var(--primary) 0%, #60A5FA 100%);
+            color: white;
+            box-shadow: var(--shadow);
+        }
+
+        .sidebar .user-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            font-size: 13px;
+            border-left: 3px solid var(--primary);
+        }
+
+        .sidebar .user-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sidebar hr {
+            border-color: rgba(255, 255, 255, 0.15) !important;
+            margin: 20px 0;
+        }
+
+        .main-content {
+            margin-left: 260px;
+            padding: 0;
+        }
+
+        .navbar-custom {
+            background-color: white;
+            border-bottom: 1px solid var(--border);
+            padding: 16px 30px;
+            box-shadow: var(--shadow);
+        }
+
+        .navbar-custom .navbar-brand {
+            color: var(--dark) !important;
+            font-weight: 600;
+            font-size: 18px;
+            margin: 0;
+        }
+
+        .content-area {
+            padding: 35px 30px;
+        }
+
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            background: linear-gradient(90deg, var(--primary) 0%, #60A5FA 100%);
+            color: white;
+            border-radius: 0 !important;
+            border: none;
+            padding: 18px 20px;
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .card.text-center {
+            border-left: 4px solid var(--primary);
+        }
+
+        .card.text-center .card-body {
+            padding: 25px 20px;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--dark);
+            font-weight: 600;
+        }
+
+        h2 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .btn {
+            border-radius: 8px;
+            font-weight: 500;
+            padding: 10px 18px;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, var(--primary) 0%, #60A5FA 100%);
+            color: white;
+            box-shadow: var(--shadow);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(90deg, var(--primary-dark) 0%, var(--primary) 100%);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            color: white;
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-success {
+            background: linear-gradient(90deg, var(--secondary) 0%, #34D399 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(90deg, #059669 0%, var(--secondary) 100%);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(90deg, var(--danger) 0%, #F87171 100%);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(90deg, #DC2626 0%, var(--danger) 100%);
+            color: white;
+        }
+
+        .btn-outline-primary {
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-outline-primary:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: #6B7280;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #4B5563;
+            color: white;
+        }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 12px;
+            letter-spacing: 0.3px;
+        }
+
+        .badge.bg-info {
+            background: linear-gradient(90deg, #3B82F6 0%, #60A5FA 100%) !important;
+        }
+
+        .badge.bg-success {
+            background: linear-gradient(90deg, var(--secondary) 0%, #34D399 100%) !important;
+        }
+
+        .badge.bg-warning {
+            background: linear-gradient(90deg, var(--warning) 0%, #FBBF24 100%) !important;
+            color: white;
+        }
+
+        .badge.bg-danger {
+            background: linear-gradient(90deg, var(--danger) 0%, #F87171 100%) !important;
+        }
+
+        .alert {
+            border-radius: 10px;
+            border: none;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+        }
+
+        .alert-info {
+            background: rgba(59, 130, 246, 0.1);
+            color: #1E40AF;
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: #065F46;
+        }
+
+        .alert-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: #7F1D1D;
+        }
+
+        .table {
+            font-size: 14px;
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: rgba(59, 130, 246, 0.05);
+        }
+
+        .table thead th {
+            border-bottom: 2px solid var(--border);
+            font-weight: 600;
+            color: var(--dark);
+            background-color: var(--light);
+        }
+
+        .progress {
+            height: 8px;
+            border-radius: 4px;
+            background-color: var(--border);
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, var(--primary) 0%, #60A5FA 100%);
+            border-radius: 4px;
+        }
+
+        .text-muted {
+            color: #6B7280 !important;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                min-height: auto;
+                padding: 15px;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-area {
+                padding: 20px 15px;
+            }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="sidebar">
+        <a href="/" class="brand">PIMS</a>
+        {% if user.is_authenticated %}
+            <div class="user-info">
+                <div class="user-name">{{ user.get_full_name|default:user.username }}</div>
+                <small>{{ user.get_role_display }}</small>
+            </div>
+            
+            {% if user.role == 'OFFICER' %}
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Management</div>
+                    <a href="{% url 'officer_approval' %}"><i class="fas fa-check-circle"></i> Approvals</a>
+                    <a href="{% url 'officer_verify_company' %}"><i class="fas fa-building"></i> Verify Companies</a>
+                </div>
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Analytics</div>
+                    <a href="{% url 'dashboard:officer-dashboard' %}"><i class="fas fa-chart-line"></i> Dashboard</a>
+                    <a href="{% url 'records:placement-records' %}"><i class="fas fa-file-alt"></i> Placement Records</a>
+                    <a href="{% url 'records:placement-reports' %}"><i class="fas fa-chart-bar"></i> Reports</a>
+                </div>
+            {% elif user.role == 'RECRUITER' %}
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Main</div>
+                    <a href="{% url 'dashboard:recruiter-dashboard' %}"><i class="fas fa-chart-line"></i> Dashboard</a>
+                </div>
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Hiring</div>
+                    <a href="{% url 'company_list' %}"><i class="fas fa-building"></i> Companies</a>
+                    <a href="{% url 'opportunity_list' %}"><i class="fas fa-briefcase"></i> Opportunities</a>
+                    <a href="{% url 'applications:recruiter_applications' %}"><i class="fas fa-users"></i> Applications</a>
+                </div>
+            {% elif user.role == 'STUDENT' %}
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Main</div>
+                    <a href="{% url 'dashboard:student-dashboard' %}"><i class="fas fa-chart-line"></i> Dashboard</a>
+                </div>
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Profile</div>
+                    <a href="{% url 'profile' %}"><i class="fas fa-user"></i> Profile</a>
+                    <a href="{% url 'academic_records' %}"><i class="fas fa-graduation-cap"></i> Academic Records</a>
+                    <a href="{% url 'skills' %}"><i class="fas fa-star"></i> Skills</a>
+                    <a href="{% url 'resumes' %}"><i class="fas fa-file-pdf"></i> Resumes</a>
+                </div>
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Career</div>
+                    <a href="{% url 'opportunity_list' %}"><i class="fas fa-briefcase"></i> Opportunities</a>
+                </div>
+            {% endif %}
+            
+            <hr>
+            <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        {% else %}
+            <a href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i> Login</a>
+            <a href="{% url 'signup' %}"><i class="fas fa-user-plus"></i> Sign Up</a>
+        {% endif %}
+    </div>
+
+    <div class="main-content">
+        {% if user.is_authenticated %}
+        <nav class="navbar navbar-expand-lg navbar-custom">
+            <div class="container-fluid">
+                <span class="navbar-brand">{% block page_title %}Dashboard{% endblock %}</span>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+            </div>
+        </nav>
+        {% endif %}
+
+        <div class="content-area">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

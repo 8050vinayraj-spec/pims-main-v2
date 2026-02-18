@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ student.user.get_full_name }} - Placements{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Placement History</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-4">
+                        <strong>{{ student.user.get_full_name }}</strong><br>
+                        Roll #: {{ student.roll_number }}
+                    </p>
+
+                    {% if records %}
+                    <div class="list-group">
+                        {% for record in records %}
+                        <div class="list-group-item">
+                            <div class="row">
+                                <div class="col">
+                                    <h6 class="mb-1">{{ record.company.name }}</h6>
+                                    <p class="mb-1"><strong>{{ record.position }}</strong></p>
+                                    <small class="text-muted">
+                                        Package: <strong>{{ record.package|floatformat:2 }} LPA</strong> | 
+                                        Year: <strong>{{ record.placement_year }}</strong> |
+                                        Date: <strong>{{ record.placement_date|date:"d M, Y" }}</strong>
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        No placement records found.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <a href="{% url 'records:placement-records' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Records
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

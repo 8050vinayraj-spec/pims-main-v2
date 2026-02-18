@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Upload Resume - PIMS{% endblock %}
+
+{% block page_title %}Upload Resume{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Upload New Resume</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label">Resume File (PDF, DOC, DOCX)</label>
+                            {{ form.file }}
+                            {% if form.file.errors %}<div class="text-danger small">{{ form.file.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="is_current" name="is_current" checked>
+                            <label class="form-check-label" for="is_current">
+                                Set as current resume for applications
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 mb-2">Upload Resume</button>
+                        <a href="{% url 'resumes' %}" class="btn btn-secondary w-100">Cancel</a>
+                    </form>
+
+                    <hr>
+
+                    <div class="alert alert-info small">
+                        <strong>Tips:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Keep your resume updated regularly</li>
+                            <li>Use a clear, professional format</li>
+                            <li>Highlight relevant projects and experiences</li>
+                            <li>Maximum file size: 5MB</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

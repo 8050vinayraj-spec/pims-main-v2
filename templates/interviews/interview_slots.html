@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Interview Slots - {{ round.get_name_display }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>Interview Slots</h2>
+            <p class="text-muted">{{ round.get_name_display }} - {{ round.opportunity.title }}</p>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'interviews:assign-students' round.id %}" class="btn btn-success me-2">
+                <i class="fas fa-user-check"></i> Assign Students
+            </a>
+            <a href="{% url 'interviews:create-interview-slot' round.id %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Slot
+            </a>
+        </div>
+    </div>
+
+    <!-- Next Steps Guide -->
+    <div class="alert alert-info mb-4">
+        <strong><i class="fas fa-info-circle"></i> Workflow:</strong> 
+        Create slots → <a href="{% url 'interviews:assign-students' round.id %}" class="alert-link">Assign students</a> → 
+        Conduct interviews → <a href="{% url 'decisions:decision-list' opportunity.id %}" class="alert-link">Make hiring decisions</a>
+    </div>
+
+    {% if slots %}
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date & Time</th>
+                        <th>Location</th>
+                        <th>Status</th>
+                        <th>Assigned</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for slot in slots %}
+                    <tr>
+                        <td>
+                            <strong>{{ slot.scheduled_at|date:"d M, Y H:i" }}</strong>
+                        </td>
+                        <td>{{ slot.location|default:"Not specified" }}</td>
+                        <td>
+                            {% if slot.status == 'AVAILABLE' %}
+                                <span class="badge bg-success">{{ slot.status }}</span>
+                            {% elif slot.status == 'BOOKED' %}
+                                <span class="badge bg-warning">{{ slot.status }}</span>
+                            {% elif slot.status == 'COMPLETED' %}
+                                <span class="badge bg-info">{{ slot.status }}</span>
+                            {% else %}
+                                <span class="badge bg-danger">{{ slot.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">
+                                {{ slot.assigned_applications.count }} students
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{% url 'admin:interviews_interviewslot_change' slot.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info" role="alert">
+        <i class="fas fa-info-circle"></i>
+        No interview slots created yet. <a href="{% url 'interviews:create-interview-slot' round.id %}">Create one</a>
+    </div>
+    {% endif %}
+
+    <div class="mt-4">
+        <a href="{% url 'interviews:interview-rounds' opportunity.id %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Rounds
+        </a>
+    </div>
+</div>
+{% endblock %}

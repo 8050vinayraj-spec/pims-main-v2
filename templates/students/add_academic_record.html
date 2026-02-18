@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Academic Record - PIMS{% endblock %}
+
+{% block page_title %}Add Academic Record{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{% if record %}Edit{% else %}Add{% endif %} Academic Record</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label">Semester</label>
+                            {{ form.semester }}
+                            {% if form.semester.errors %}<div class="text-danger small">{{ form.semester.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">SGPA (0.0 - 10.0)</label>
+                            {{ form.sgpa }}
+                            {% if form.sgpa.errors %}<div class="text-danger small">{{ form.sgpa.errors }}</div>{% endif %}
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 mb-2">
+                            {% if record %}Update Record{% else %}Add Record{% endif %}
+                        </button>
+                        <a href="{% url 'academic_records' %}" class="btn btn-secondary w-100">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

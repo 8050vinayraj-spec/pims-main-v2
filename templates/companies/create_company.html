@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if company %}Edit{% else %}Register{% endif %} Company - PIMS{% endblock %}
+
+{% block page_title %}{% if company %}Edit Company{% else %}Register Company{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{% if company %}Edit Company Details{% else %}Register New Company{% endif %}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Company Name *</label>
+                                {{ form.name }}
+                                {% if form.name.errors %}<div class="text-danger small">{{ form.name.errors }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Website *</label>
+                                {{ form.website }}
+                                {% if form.website.errors %}<div class="text-danger small">{{ form.website.errors }}</div>{% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">City</label>
+                                {{ form.city }}
+                                {% if form.city.errors %}<div class="text-danger small">{{ form.city.errors }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Industry *</label>
+                                {{ form.industry }}
+                                {% if form.industry.errors %}<div class="text-danger small">{{ form.industry.errors }}</div>{% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}<div class="text-danger small">{{ form.description.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Company Logo</label>
+                            {% if company.logo %}
+                                <div class="mb-2">
+                                    <img src="{{ company.logo.url }}" alt="{{ company.name }}" style="max-width: 200px; border-radius: 6px;">
+                                </div>
+                            {% endif %}
+                            {{ form.logo }}
+                            {% if form.logo.errors %}<div class="text-danger small">{{ form.logo.errors }}</div>{% endif %}
+                        </div>
+
+                        {% if not company %}
+                            <div class="mb-3">
+                                <label class="form-label">Your Designation *</label>
+                                <input type="text" name="designation" class="form-control" placeholder="e.g., Hiring Manager, HR Lead" required>
+                            </div>
+                        {% endif %}
+
+                        <button type="submit" class="btn btn-primary w-100 mb-2">
+                            {% if company %}Update Company{% else %}Register Company{% endif %}
+                        </button>
+                        <a href="{% url 'company_list' %}" class="btn btn-secondary w-100">Cancel</a>
+                    </form>
+                </div>
+            </div>
+
+            {% if not company %}
+                <div class="alert alert-info mt-4">
+                    <strong>Note:</strong> Once registered, your company will be pending officer verification before you can post opportunities.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

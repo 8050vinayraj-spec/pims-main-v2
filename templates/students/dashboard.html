@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Dashboard - PIMS{% endblock %}
+
+{% block page_title %}Student Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>Welcome, {{ user.first_name|default:user.username }}!</h2>
+            <p class="text-muted">{{ student.get_branch_display }} | Year {{ student.year }}</p>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h3>CGPA</h3>
+                    <p style="font-size: 32px; color: #2563EB; font-weight: bold;">{{ student.cgpa|floatformat:2 }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Completion Progress -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Profile Completion</h5>
+        </div>
+        <div class="card-body">
+            <div class="progress mb-2">
+                <div class="progress-bar" role="progressbar" style="width: {{ profile_completion }}%">
+                    {{ profile_completion }}%
+                </div>
+            </div>
+            <p class="text-muted small">Complete your profile to increase opportunities visibility</p>
+        </div>
+    </div>
+
+    <!-- Quick Access Cards -->
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <div style="font-size: 32px; color: #2563EB; margin-bottom: 10px;">📋</div>
+                    <h5 class="card-title">Profile</h5>
+                    <p class="text-muted small">{{ student.academic_records.count }} records</p>
+                    <a href="{% url 'profile' %}" class="btn btn-sm btn-primary">View</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <div style="font-size: 32px; color: #2563EB; margin-bottom: 10px;">📚</div>
+                    <h5 class="card-title">Academic Records</h5>
+                    <p class="text-muted small">{{ student.academic_records.count }} semesters</p>
+                    <a href="{% url 'academic_records' %}" class="btn btn-sm btn-primary">View</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <div style="font-size: 32px; color: #2563EB; margin-bottom: 10px;">⚙️</div>
+                    <h5 class="card-title">Skills</h5>
+                    <p class="text-muted small">{{ student.skills.count }} skills added</p>
+                    <a href="{% url 'skills' %}" class="btn btn-sm btn-primary">View</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <div style="font-size: 32px; color: #2563EB; margin-bottom: 10px;">📄</div>
+                    <h5 class="card-title">Resumes</h5>
+                    <p class="text-muted small">{{ student.resumes.count }} versions</p>
+                    <a href="{% url 'resumes' %}" class="btn btn-sm btn-primary">View</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Eligibility Badge -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Eligibility Status</h5>
+        </div>
+        <div class="card-body">
+            {% if student.cgpa >= 6.5 %}
+                <span class="badge bg-success" style="font-size: 14px;">✓ Eligible for opportunities</span>
+                <p class="mt-2 text-muted">Your profile meets the minimum eligibility criteria.</p>
+            {% elif student.cgpa > 0 %}
+                <span class="badge bg-warning" style="font-size: 14px;">⚠ Below threshold</span>
+                <p class="mt-2 text-muted">Your CGPA is {{ student.cgpa|floatformat:2 }}. Some opportunities require 6.5+</p>
+            {% else %}
+                <span class="badge bg-secondary" style="font-size: 14px;">○ Not set</span>
+                <p class="mt-2 text-muted">Update your CGPA to enable opportunity filtering.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ company.name }} - PIMS{% endblock %}
+
+{% block page_title %}{{ company.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            {% if company.logo %}
+                <img src="{{ company.logo.url }}" alt="{{ company.name }}" style="max-width: 300px; border-radius: 8px; margin-bottom: 20px;">
+            {% endif %}
+            
+            <h2>{{ company.name }}</h2>
+            <p class="text-muted mb-2">
+                <strong>{{ company.get_industry_display }}</strong> | {{ company.city|default:"Location not specified" }}
+            </p>
+            <p class="mb-3">
+                {% if company.verified %}
+                    <span class="badge bg-success" style="font-size: 14px;">✓ Verified by Officer</span>
+                {% else %}
+                    <span class="badge bg-warning" style="font-size: 14px;">⏳ Pending Verification</span>
+                {% endif %}
+            </p>
+        </div>
+        <div class="col-md-4">
+            {% if user.role == 'RECRUITER' and user.recruiter_profile.company.id == company.id %}
+                <a href="{% url 'edit_company' company.id %}" class="btn btn-primary btn-sm">Edit Company</a>
+            {% endif %}
+            <a href="{% url 'company_list' %}" class="btn btn-secondary btn-sm">Back to List</a>
+        </div>
+    </div>
+
+    <!-- Company Details -->
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">About</h5>
+                </div>
+                <div class="card-body">
+                    <p>{{ company.description|default:"No description provided" }}</p>
+                    <p class="mb-0">
+                        <strong>Website:</strong> <a href="{{ company.website }}" target="_blank">{{ company.website }}</a>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Hiring History -->
+            {% if company.history %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Hiring History</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-4">
+                                <h4 style="color: #2563EB; font-weight: bold;">{{ company.history.past_hires }}</h4>
+                                <p class="text-muted">Previous Hires</p>
+                            </div>
+                            <div class="col-md-4">
+                                <h4 style="color: #2563EB; font-weight: bold;">{{ company.history.total_applications_received }}</h4>
+                                <p class="text-muted">Applications Received</p>
+                            </div>
+                            <div class="col-md-4">
+                                <h4 style="color: #2563EB; font-weight: bold;">{{ company.history.last_hiring_year|default:"N/A" }}</h4>
+                                <p class="text-muted">Last Hiring Year</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Recruiters -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recruiters ({{ recruiters.count }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if recruiters %}
+                        <div class="list-group list-group-sm">
+                            {% for recruiter in recruiters %}
+                                <div class="list-group-item">
+                                    <h6 class="mb-1">{{ recruiter.user.get_full_name|default:recruiter.user.username }}</h6>
+                                    <p class="text-muted small mb-1">{{ recruiter.designation }}</p>
+                                    {% if recruiter.phone %}
+                                        <p class="text-muted small">📞 {{ recruiter.phone }}</p>
+                                    {% endif %}
+                                    {% if recruiter.verified %}
+                                        <span class="badge bg-success small">Verified</span>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted small">No recruiters added yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

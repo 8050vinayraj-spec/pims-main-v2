@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Close Opportunity - PIMS{% endblock %}
+
+{% block page_title %}Close Opportunity{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">Confirm Close</h5>
+                </div>
+                <div class="card-body">
+                    <p>Closing this opportunity will stop accepting new applications.</p>
+                    <p><strong>Title:</strong> {{ opportunity.title }}</p>
+                    <p><strong>Status:</strong> {{ opportunity.get_status_display }}</p>
+
+                    <form method="POST">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger w-100 mb-2">Close Opportunity</button>
+                        <a href="{% url 'opportunity_detail' opportunity.id %}" class="btn btn-secondary w-100">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

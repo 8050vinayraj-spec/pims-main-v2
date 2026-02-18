@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}Screening Results - PIMS{% endblock %}
+
+{% block page_title %}Screening Results{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h3>Screening Results for {{ opportunity.title }}</h3>
+            <p class="text-muted">{{ opportunity.company.name }}</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'screening:screening_rule' opportunity.id %}" class="btn btn-secondary">Back to Rules</a>
+            <a href="{% url 'applications:applicant_list' opportunity.id %}" class="btn btn-info">View Applicants</a>
+        </div>
+    </div>
+
+    {% if results %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Student</th>
+                        <th>Branch</th>
+                        <th>CGPA</th>
+                        <th>Result</th>
+                        <th>Reason</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in results %}
+                        <tr>
+                            <td><strong>{{ result.application.student.user.get_full_name|default:result.application.student.user.username }}</strong></td>
+                            <td>{{ result.application.student.branch }}</td>
+                            <td>{{ result.application.student.cgpa }}</td>
+                            <td>
+                                {% if result.result == 'ELIGIBLE' %}
+                                    <span class="badge bg-success">Eligible</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Not Eligible</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ result.reason|default:"-" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <strong>No results yet.</strong>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

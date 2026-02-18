@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+{% block title %}Account Approvals - PIMS{% endblock %}
+
+{% block page_title %}Account Approvals{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Pending Approvals Tab -->
+    <h3 class="mb-4">
+        <span class="badge bg-warning">{{ pending_approvals|length }}</span> Pending Approvals
+    </h3>
+    
+    {% if pending_approvals %}
+        <div class="row">
+            {% for approval in pending_approvals %}
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ approval.user.get_full_name|default:approval.user.username }}</h5>
+                            <p class="text-muted mb-2">
+                                <strong>Username:</strong> {{ approval.user.username }}
+                            </p>
+                            <p class="text-muted mb-2">
+                                <strong>Email:</strong> {{ approval.user.email }}
+                            </p>
+                            <p class="text-muted mb-3">
+                                <strong>Role:</strong> <span class="badge bg-info">{{ approval.user.get_role_display }}</span>
+                            </p>
+                            <p class="text-muted small mb-3">
+                                <strong>Applied:</strong> {{ approval.created_at|date:"M d, Y H:i" }}
+                            </p>
+                            
+                            <form method="POST" action="{% url 'officer_approval' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="approval_id" value="{{ approval.id }}">
+                                
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="action" id="approve_{{ approval.id }}" value="APPROVE" checked>
+                                        <label class="form-check-label" for="approve_{{ approval.id }}">
+                                            Approve
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="action" id="reject_{{ approval.id }}" value="REJECT">
+                                        <label class="form-check-label" for="reject_{{ approval.id }}">
+                                            Reject
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3" id="rejection_reason_{{ approval.id }}" style="display: none;">
+                                    <textarea name="rejection_reason" class="form-control" rows="3" placeholder="Reason for rejection"></textarea>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary w-100">Submit Decision</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <script>
+                    document.getElementById('reject_{{ approval.id }}').addEventListener('change', function() {
+                        document.getElementById('rejection_reason_{{ approval.id }}').style.display = 'block';
+                    });
+                    document.getElementById('approve_{{ approval.id }}').addEventListener('change', function() {
+                        document.getElementById('rejection_reason_{{ approval.id }}').style.display = 'none';
+                    });
+                </script>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">No pending approvals.</div>
+    {% endif %}
+    
+    <hr class="my-5">
+    
+    <!-- Approved Accounts -->
+    <h3 class="mb-4">
+        <span class="badge bg-success">{{ approved_approvals|length }}</span> Approved Accounts
+    </h3>
+    
+    {% if approved_approvals %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>Username</th>
+                        <th>Role</th>
+                        <th>Approved By</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for approval in approved_approvals %}
+                        <tr>
+                            <td>{{ approval.user.get_full_name|default:approval.user.username }}</td>
+                            <td>{{ approval.user.username }}</td>
+                            <td><span class="badge bg-info">{{ approval.user.get_role_display }}</span></td>
+                            <td>{{ approval.approved_by.username|default:"System" }}</td>
+                            <td>{{ approval.updated_at|date:"M d, Y" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info">No approved accounts yet.</div>
+    {% endif %}
+    
+    <hr class="my-5">
+    
+    <!-- Rejected Accounts -->
+    <h3 class="mb-4">
+        <span class="badge bg-danger">{{ rejected_approvals|length }}</span> Rejected Accounts
+    </h3>
+    
+    {% if rejected_approvals %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>Username</th>
+                        <th>Role</th>
+                        <th>Reason</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for approval in rejected_approvals %}
+                        <tr>
+                            <td>{{ approval.user.get_full_name|default:approval.user.username }}</td>
+                            <td>{{ approval.user.username }}</td>
+                            <td><span class="badge bg-secondary">{{ approval.user.get_role_display }}</span></td>
+                            <td>{{ approval.rejection_reason|default:"No reason provided" }}</td>
+                            <td>{{ approval.updated_at|date:"M d, Y" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info">No rejected accounts.</div>
+    {% endif %}
+</div>
+{% endblock %}

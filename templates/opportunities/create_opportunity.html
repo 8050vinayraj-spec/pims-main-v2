@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if opportunity %}Edit{% else %}Create{% endif %} Opportunity - PIMS{% endblock %}
+
+{% block page_title %}{% if opportunity %}Edit Opportunity{% else %}Post Opportunity{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{% if opportunity %}Edit Opportunity{% else %}Create New Opportunity{% endif %}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {% csrf_token %}
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Title *</label>
+                                {{ form.title }}
+                                {% if form.title.errors %}<div class="text-danger small">{{ form.title.errors }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Type *</label>
+                                {{ form.type }}
+                                {% if form.type.errors %}<div class="text-danger small">{{ form.type.errors }}</div>{% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">CTC / Stipend *</label>
+                                {{ form.ctc_or_stipend }}
+                                {% if form.ctc_or_stipend.errors %}<div class="text-danger small">{{ form.ctc_or_stipend.errors }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Deadline *</label>
+                                {{ form.deadline }}
+                                {% if form.deadline.errors %}<div class="text-danger small">{{ form.deadline.errors }}</div>{% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Description *</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}<div class="text-danger small">{{ form.description.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Minimum CGPA *</label>
+                            {{ form.min_cgpa }}
+                            {% if form.min_cgpa.errors %}<div class="text-danger small">{{ form.min_cgpa.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Max Applicants *</label>
+                            {{ form.max_applicants }}
+                            {% if form.max_applicants.errors %}<div class="text-danger small">{{ form.max_applicants.errors }}</div>{% endif %}
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 mb-2">
+                            {% if opportunity %}Update Opportunity{% else %}Create Opportunity{% endif %}
+                        </button>
+                        <a href="{% url 'opportunity_list' %}" class="btn btn-secondary w-100">Cancel</a>
+                    </form>
+                </div>
+            </div>
+
+            {% if opportunity %}
+                <div class="card mt-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Required Skills</h5>
+                        <a href="{% url 'add_required_skill' opportunity.id %}" class="btn btn-sm btn-primary">+ Add Skill</a>
+                    </div>
+                    <div class="card-body">
+                        {% if opportunity.required_skills.all %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Skill</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for skill in opportunity.required_skills.all %}
+                                            <tr>
+                                                <td>{{ skill.skill.name }}</td>
+                                                <td>
+                                                    <a href="{% url 'delete_required_skill' skill.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <p class="text-muted">No skills specified yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

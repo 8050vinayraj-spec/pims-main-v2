@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+
+{% block title %}Recruiter Dashboard - PIMS{% endblock %}
+
+{% block page_title %}Recruiter Dashboard - {{ company.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>{{ company.name }}</h2>
+            <p class="text-muted">{{ company.get_industry_display }} | {{ company.city }}</p>
+        </div>
+        <div class="col-md-4">
+            {% if not company.verified %}
+                <div class="alert alert-warning mb-0">
+                    ⏳ Pending officer verification
+                </div>
+            {% else %}
+                <div class="alert alert-success mb-0">
+                    ✓ Company verified
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Company Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h4 style="color: #2563EB; font-weight: bold;">{{ company.recruiters.count }}</h4>
+                    <p class="text-muted">Active Recruiters</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h4 style="color: #2563EB; font-weight: bold;">{{ opportunities_count }}</h4>
+                    <p class="text-muted">Opportunities Posted</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h4 style="color: #2563EB; font-weight: bold;">{{ company.history.past_hires }}</h4>
+                    <p class="text-muted">Previous Hires</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h4 style="color: #2563EB; font-weight: bold;">{{ company.history.total_applications_received }}</h4>
+                    <p class="text-muted">Applications</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Company Management</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'edit_company' company.id %}" class="btn btn-primary mb-2 w-100">Edit Company Details</a>
+                    <a href="{% url 'company_detail' company.id %}" class="btn btn-secondary w-100">View Public Profile</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Hiring Actions</h5>
+                </div>
+                <div class="card-body">
+                    {% if company.verified %}
+                        <a href="#" class="btn btn-primary mb-2 w-100">+ Post Opportunity</a>
+                        <a href="#" class="btn btn-secondary w-100">View Applications</a>
+                    {% else %}
+                        <button class="btn btn-primary mb-2 w-100" disabled>+ Post Opportunity</button>
+                        <p class="text-muted small">Your company must be verified by an officer to post opportunities.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recruiter Team -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Recruiter Team ({{ company.recruiters.count }})</h5>
+        </div>
+        <div class="card-body">
+            {% if company.recruiters.count > 0 %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Designation</th>
+                                <th>Phone</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for recruiter in company.recruiters.all %}
+                                <tr>
+                                    <td>{{ recruiter.user.get_full_name|default:recruiter.user.username }}</td>
+                                    <td>{{ recruiter.user.email }}</td>
+                                    <td>{{ recruiter.designation }}</td>
+                                    <td>{{ recruiter.phone|default:"—" }}</td>
+                                    <td>
+                                        {% if recruiter.verified %}
+                                            <span class="badge bg-success">Verified</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted">No recruiters in your company yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

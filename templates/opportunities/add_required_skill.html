@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Required Skill - PIMS{% endblock %}
+
+{% block page_title %}Add Required Skill{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Add Skill</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label">Skill *</label>
+                            {{ form.skill }}
+                            {% if form.skill.errors %}<div class="text-danger small">{{ form.skill.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Proficiency Level *</label>
+                            {{ form.proficiency_level }}
+                            {% if form.proficiency_level.errors %}<div class="text-danger small">{{ form.proficiency_level.errors }}</div>{% endif %}
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 mb-2">Add Skill</button>
+                        <a href="{% url 'opportunity_detail' opportunity.id %}" class="btn btn-secondary w-100">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
