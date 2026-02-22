@@ -11,7 +11,7 @@
             <h3>Semester Records</h3>
         </div>
         <div class="col-md-6 text-end">
-            <a href="{% url 'add_academic_record' %}" class="btn btn-primary">+ Add Record</a>
+            <a href="{% url 'students:add_academic_record' %}" class="btn btn-primary">+ Add Record</a>
         </div>
     </div>
 
@@ -35,8 +35,8 @@
                             </td>
                             <td><small class="text-muted">{{ record.created_at|date:"M d, Y" }}</small></td>
                             <td>
-                                <a href="{% url 'edit_academic_record' record.id %}" class="btn btn-sm btn-outline-primary">Edit</a>
-                                <a href="{% url 'delete_academic_record' record.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                                <a href="{% url 'students:edit_academic_record' record_id=record.id %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                <a href="{% url 'students:delete_academic_record' record_id=record.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
                             </td>
                         </tr>
                     {% endfor %}
@@ -83,7 +83,8 @@
         </div>
     {% else %}
         <div class="alert alert-info">
-            <strong>No records yet.</strong> <a href="{% url 'add_academic_record' %}">Add your first semester record</a>
+            <strong>No records yet.</strong> 
+            <a href="{% url 'students:add_academic_record' %}">Add your first semester record</a>
         </div>
     {% endif %}
 </div>

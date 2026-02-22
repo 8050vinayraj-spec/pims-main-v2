@@ -4,7 +4,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import CustomUser, LoginActivity, AccountApproval
 from .forms import SignupForm, LoginForm, ApprovalActionForm
+from students.models import StudentProfile
 
+# ---------------- Signup ----------------
 
 def signup_view(request):
     if request.user.is_authenticated:
@@ -14,19 +16,18 @@ def signup_view(request):
         form = SignupForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
+            user.role = 'STUDENT'
             user.is_approved = False
             user.save()
-            
-            # Create approval record
             AccountApproval.objects.create(user=user, status='PENDING')
-            
-            messages.success(request, 'Account created successfully! Awaiting approval from officer.')
+            messages.success(request, 'Account created successfully! Awaiting officer approval.')
             return redirect('approval_pending')
     else:
         form = SignupForm()
     
     return render(request, 'accounts/signup.html', {'form': form})
 
+# ---------------- Login ----------------
 
 def login_view(request):
     if request.user.is_authenticated:
@@ -47,13 +48,20 @@ def login_view(request):
                 login(request, user)
                 LoginActivity.objects.create(user=user)
                 
-                # Redirect by role
-                if user.role == 'OFFICER':
+                if user.role.upper() == 'OFFICER':
                     return redirect('dashboard:officer-dashboard')
-                elif user.role == 'RECRUITER':
+                elif user.role.upper() == 'RECRUITER':
                     return redirect('dashboard:recruiter-dashboard')
-                else:  # STUDENT
-                    return redirect('dashboard:student-dashboard')
+                elif user.role.upper() == 'STUDENT':
+                    try:
+                        _ = user.student_profile
+                        return redirect('dashboard:student-dashboard')
+                    except StudentProfile.DoesNotExist:
+                        messages.info(request, "Please complete your profile before accessing the dashboard.")
+                        return redirect('students:complete_profile')
+                else:
+                    messages.error(request, 'Invalid role assigned to user.')
+                    return redirect('login')
             else:
                 messages.error(request, 'Invalid username or password.')
     else:
@@ -61,23 +69,25 @@ def login_view(request):
     
     return render(request, 'accounts/login.html', {'form': form})
 
+# ---------------- Logout ----------------
 
 def logout_view(request):
     logout(request)
     messages.success(request, 'Logged out successfully.')
     return redirect('login')
 
+# ---------------- Approval Pending ----------------
 
 def approval_pending_view(request):
-    if request.user.is_authenticated and request.user.is_approved:
+    if request.user.is_authenticated:
         return redirect('home')
-    
     return render(request, 'accounts/approval_pending.html')
 
+# ---------------- Officer Approval ----------------
 
 @login_required
 def officer_approval_view(request):
-    if request.user.role != 'OFFICER':
+    if request.user.role.upper() != 'OFFICER':
         messages.error(request, 'You do not have permission to access this page.')
         return redirect('home')
     
@@ -90,41 +100,43 @@ def officer_approval_view(request):
             action = form.cleaned_data.get('action')
             if action == 'APPROVE':
                 approval.status = 'APPROVED'
-                approval.user.is_approved = True
                 approval.approved_by = request.user
                 approval.save()
-                approval.user.save()
+                approval.user.is_approved = True
+                approval.user.save(update_fields=['is_approved'])
                 messages.success(request, f"User {approval.user.username} approved successfully.")
-            else:  # REJECT
+            elif action == 'REJECT':
                 approval.status = 'REJECTED'
                 approval.rejection_reason = form.cleaned_data.get('rejection_reason', '')
                 approval.approved_by = request.user
                 approval.save()
+                approval.user.is_approved = False
+                approval.user.save(update_fields=['is_approved'])
                 messages.info(request, f"User {approval.user.username} rejected.")
             
             return redirect('officer_approval')
     
-    # Get pending approvals
-    pending_approvals = AccountApproval.objects.filter(status='PENDING')
-    approved_approvals = AccountApproval.objects.filter(status='APPROVED')
-    rejected_approvals = AccountApproval.objects.filter(status='REJECTED')
-    
     context = {
-        'pending_approvals': pending_approvals,
-        'approved_approvals': approved_approvals,
-        'rejected_approvals': rejected_approvals,
+        'pending_approvals': AccountApproval.objects.filter(status='PENDING'),
+        'approved_approvals': AccountApproval.objects.filter(status='APPROVED'),
+        'rejected_approvals': AccountApproval.objects.filter(status='REJECTED'),
     }
-    
     return render(request, 'accounts/approval_list.html', context)
 
+# ---------------- Home ----------------
 
 @login_required
 def home_view(request):
-    """Redirect to appropriate dashboard based on role"""
-    if request.user.role == 'OFFICER':
+    if request.user.role.upper() == 'OFFICER':
         return redirect('dashboard:officer-dashboard')
-    elif request.user.role == 'RECRUITER':
+    elif request.user.role.upper() == 'RECRUITER':
         return redirect('dashboard:recruiter-dashboard')
-    else:  # STUDENT
-        return redirect('dashboard:student-dashboard')
-
+    elif request.user.role.upper() == 'STUDENT':
+        try:
+            _ = request.user.student_profile
+            return redirect('dashboard:student-dashboard')
+        except StudentProfile.DoesNotExist:
+            return redirect('students:complete_profile')
+    else:
+        messages.error(request, 'Invalid role assigned to user.')
+        return redirect('login')

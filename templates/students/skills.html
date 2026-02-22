@@ -11,7 +11,7 @@
             <h3>Skills ({{ student.skills.count }})</h3>
         </div>
         <div class="col-md-6 text-end">
-            <a href="{% url 'add_skill' %}" class="btn btn-primary">+ Add Skill</a>
+            <a href="{% url 'students:add_skill' %}" class="btn btn-primary">+ Add Skill</a>
         </div>
     </div>
 
@@ -33,7 +33,7 @@
                             </p>
                             <small class="text-muted">Added {{ skill.added_at|date:"M d, Y" }}</small>
                             <div class="mt-3">
-                                <a href="{% url 'delete_skill' skill.id %}" class="btn btn-sm btn-outline-danger">Remove</a>
+                                <a href="{% url 'students:delete_skill' skill_id=skill.id %}" class="btn btn-sm btn-outline-danger">Remove</a>
                             </div>
                         </div>
                     </div>
@@ -42,7 +42,8 @@
         </div>
     {% else %}
         <div class="alert alert-info">
-            <strong>No skills added yet.</strong> <a href="{% url 'add_skill' %}">Add your first skill</a>
+            <strong>No skills added yet.</strong> 
+            <a href="{% url 'students:add_skill' %}">Add your first skill</a>
         </div>
     {% endif %}
 </div>

@@ -7,45 +7,46 @@ from .forms import (
     AddSkillForm, ResumeUploadForm
 )
 
+# ---------------- Dashboard & Profile ----------------
 
 @login_required
 def student_dashboard_view(request):
     """Student dashboard showing profile overview"""
-    if request.user.role != 'STUDENT':
+    if request.user.role.upper() != 'STUDENT':
         messages.error(request, 'You do not have access to this page.')
         return redirect('home')
     
     try:
         student = request.user.student_profile
     except StudentProfile.DoesNotExist:
-        # Create profile if doesn't exist
-        student = StudentProfile.objects.create(
-            user=request.user,
-            branch='CSE',
-            year=1
-        )
+        messages.info(request, "Please complete your profile before accessing the dashboard.")
+        return redirect('students:complete_profile')
     
-    # Get student's applications with their decision and offer response status
     from applications.models import Application
-    from django.db.models import Prefetch
     
-    # Build queryset with proper prefetching
     applications_qs = Application.objects.filter(student=student).select_related(
         'opportunity', 'opportunity__company'
     )
+    applications = list(applications_qs.prefetch_related(
+        'hiring_decision__offer_response', 'screening_result', 'slot_assignment'
+    ))
     
-    # Get all applications (don't filter yet to keep queryset intact)
-    applications = list(applications_qs.prefetch_related('hiring_decision__offer_response', 'screening_result', 'slot_assignment'))
-    
-    # Calculate statistics from the list
     total_apps = len(applications)
     shortlisted = sum(1 for app in applications if app.status == 'SHORTLISTED')
     offers_made = sum(1 for app in applications if app.hiring_decision and app.hiring_decision.result == 'SELECTED')
-    offers_accepted = sum(1 for app in applications if app.hiring_decision and app.hiring_decision.result == 'SELECTED' and app.hiring_decision.offer_response and app.hiring_decision.offer_response.response == 'ACCEPTED')
+    offers_accepted = sum(
+        1 for app in applications
+        if app.hiring_decision and app.hiring_decision.result == 'SELECTED'
+        and app.hiring_decision.offer_response
+        and app.hiring_decision.offer_response.response == 'ACCEPTED'
+    )
     rejected = sum(1 for app in applications if app.status == 'REJECTED')
     
-    # Pending offers - SELECTED but not yet responded
-    pending_offers = [app for app in applications if app.hiring_decision and app.hiring_decision.result == 'SELECTED' and (not app.hiring_decision.offer_response or app.hiring_decision.offer_response.response not in ['ACCEPTED', 'REJECTED'])]
+    pending_offers = [
+        app for app in applications
+        if app.hiring_decision and app.hiring_decision.result == 'SELECTED'
+        and (not app.hiring_decision.offer_response or app.hiring_decision.offer_response.response not in ['ACCEPTED', 'REJECTED'])
+    ]
     
     context = {
         'student': student,
@@ -61,22 +62,43 @@ def student_dashboard_view(request):
     
     return render(request, 'dashboard/student_dashboard.html', context)
 
+@login_required
+def complete_profile_view(request):
+    """First-time profile completion for students"""
+    if request.user.role.upper() != "STUDENT":
+        messages.error(request, "Only students can complete this profile.")
+        return redirect('home')
+
+    try:
+        _ = request.user.student_profile
+        messages.info(request, "Profile already exists.")
+        return redirect('dashboard:student_dashboard')
+    except StudentProfile.DoesNotExist:
+        if request.method == "POST":
+            form = StudentProfileForm(request.POST, request.FILES)
+            if form.is_valid():
+                profile = form.save(commit=False)
+                profile.user = request.user
+                profile.save()
+                messages.success(request, "Profile created successfully!")
+                return redirect('dashboard:student_dashboard')
+        else:
+            form = StudentProfileForm()
+
+        return render(request, 'students/complete_profile.html', {'form': form})
 
 @login_required
 def profile_view(request):
     """View and edit student profile"""
-    if request.user.role != 'STUDENT':
+    if request.user.role.upper() != 'STUDENT':
         messages.error(request, 'You do not have access to this page.')
         return redirect('home')
     
     try:
         student = request.user.student_profile
     except StudentProfile.DoesNotExist:
-        student = StudentProfile.objects.create(
-            user=request.user,
-            branch='CSE',
-            year=1
-        )
+        messages.info(request, "Please complete your profile first.")
+        return redirect('students:complete_profile')
     
     if request.method == 'POST':
         form = StudentProfileForm(request.POST, request.FILES, instance=student)
@@ -87,37 +109,30 @@ def profile_view(request):
     else:
         form = StudentProfileForm(instance=student)
     
-    context = {
+    return render(request, 'students/profile.html', {
         'form': form,
         'student': student,
         'profile_completion': student.profile_completion_percentage(),
-    }
-    
-    return render(request, 'students/profile.html', context)
+    })
 
+# ---------------- Academic Records ----------------
 
 @login_required
 def academic_records_view(request):
-    """View and manage academic records"""
-    if request.user.role != 'STUDENT':
+    if request.user.role.upper() != 'STUDENT':
         messages.error(request, 'You do not have access to this page.')
         return redirect('home')
-    
     student = get_object_or_404(StudentProfile, user=request.user)
     academic_records = student.academic_records.all()
-    
-    context = {
+    return render(request, 'students/academic_records.html', {
         'student': student,
         'academic_records': academic_records,
-    }
-    
-    return render(request, 'students/academic_records.html', context)
-
+    })
 
 @login_required
 def add_academic_record_view(request):
-    """Add or edit academic record"""
-    if request.user.role != 'STUDENT':
+    """Add academic record"""
+    if request.user.role.upper() != 'STUDENT':
         messages.error(request, 'You do not have access to this page.')
         return redirect('home')
     
@@ -134,18 +149,12 @@ def add_academic_record_view(request):
     else:
         form = AcademicRecordForm()
     
-    context = {
-        'form': form,
-        'student': student,
-    }
-    
-    return render(request, 'students/add_academic_record.html', context)
-
+    return render(request, 'students/add_academic_record.html', {'form': form, 'student': student})
 
 @login_required
 def edit_academic_record_view(request, record_id):
     """Edit existing academic record"""
-    if request.user.role != 'STUDENT':
+    if request.user.role.upper() != 'STUDENT':
         messages.error(request, 'You do not have access to this page.')
         return redirect('home')
     
@@ -161,19 +170,12 @@ def edit_academic_record_view(request, record_id):
     else:
         form = AcademicRecordForm(instance=record)
     
-    context = {
-        'form': form,
-        'student': student,
-        'record': record,
-    }
-    
-    return render(request, 'students/add_academic_record.html', context)
-
+    return render(request, 'students/add_academic_record.html', {'form': form, 'student': student, 'record': record})
 
 @login_required
 def delete_academic_record_view(request, record_id):
     """Delete academic record"""
-    if request.user.role != 'STUDENT':
+    if request.user.role.upper() != 'STUDENT':
         messages.error(request, 'You do not have access to this page.')
         return redirect('home')
     
@@ -185,43 +187,29 @@ def delete_academic_record_view(request, record_id):
         messages.success(request, 'Record deleted successfully!')
         return redirect('academic_records')
     
-    context = {
-        'record': record,
-        'student': student,
-    }
-    
-    return render(request, 'students/confirm_delete_record.html', context)
+    return render(request, 'students/confirm_delete_record.html', {'record': record, 'student': student})
 
+# ---------------- Skills ----------------
 
 @login_required
 def skills_view(request):
-    """View and manage skills"""
-    if request.user.role != 'STUDENT':
+    if request.user.role.upper() != 'STUDENT':
         messages.error(request, 'You do not have access to this page.')
         return redirect('home')
-    
     student = get_object_or_404(StudentProfile, user=request.user)
     skills = student.skills.all()
-    
-    context = {
-        'student': student,
-        'skills': skills,
-    }
-    
-    return render(request, 'students/skills.html', context)
-
+    return render(request, 'students/skills.html', {'student': student, 'skills': skills})
 
 @login_required
 def add_skill_view(request):
     """Add skill to profile"""
-    if request.user.role != 'STUDENT':
+    if request.user.role.upper() != 'STUDENT':
         messages.error(request, 'You do not have access to this page.')
         return redirect('home')
     
     student = get_object_or_404(StudentProfile, user=request.user)
     
     if request.method == 'POST':
-        # Check if adding existing skill or creating new one
         if 'skill_id' in request.POST:
             form = StudentSkillForm(request.POST)
             if form.is_valid():
@@ -238,13 +226,11 @@ def add_skill_view(request):
                 proficiency = form.cleaned_data['proficiency']
                 years = form.cleaned_data['years_of_experience']
                 
-                # Create or get skill
                 skill, _ = Skill.objects.get_or_create(
                     name=skill_name,
                     defaults={'category': category}
                 )
                 
-                # Create student skill
                 StudentSkill.objects.create(
                     student=student,
                     skill=skill,
@@ -256,59 +242,36 @@ def add_skill_view(request):
     else:
         form = StudentSkillForm()
     
-    context = {
-        'form': form,
-        'student': student,
-    }
-    
-    return render(request, 'students/add_skill.html', context)
-
+    return render(request, 'students/add_skill.html', {'form': form, 'student': student})
 
 @login_required
 def delete_skill_view(request, skill_id):
     """Delete skill"""
-    if request.user.role != 'STUDENT':
+    if request.user.role.upper() != 'STUDENT':
         messages.error(request, 'You do not have access to this page.')
         return redirect('home')
     
-    student = get_object_or_404(StudentProfile, user=request.user)
-    skill = get_object_or_404(StudentSkill, id=skill_id, student=student)
-    
-    if request.method == 'POST':
-        skill.delete()
-        messages.success(request, 'Skill removed successfully!')
-        return redirect('skills')
-    
-    context = {
-        'skill': skill,
-        'student': student,
-    }
-    
-    return render(request, 'students/confirm_delete_skill.html', context)
-
+# ---------------- Resumes ----------------
 
 @login_required
 def resumes_view(request):
     """View and manage resumes"""
-    if request.user.role != 'STUDENT':
+    if request.user.role.upper() != 'STUDENT':
         messages.error(request, 'You do not have access to this page.')
         return redirect('home')
     
     student = get_object_or_404(StudentProfile, user=request.user)
     resumes = student.resumes.all()
     
-    context = {
+    return render(request, 'students/resumes.html', {
         'student': student,
         'resumes': resumes,
-    }
-    
-    return render(request, 'students/resumes.html', context)
-
+    })
 
 @login_required
 def upload_resume_view(request):
     """Upload new resume version"""
-    if request.user.role != 'STUDENT':
+    if request.user.role.upper() != 'STUDENT':
         messages.error(request, 'You do not have access to this page.')
         return redirect('home')
     
@@ -330,18 +293,12 @@ def upload_resume_view(request):
     else:
         form = ResumeUploadForm()
     
-    context = {
-        'form': form,
-        'student': student,
-    }
-    
-    return render(request, 'students/upload_resume.html', context)
-
+    return render(request, 'students/upload_resume.html', {'form': form, 'student': student})
 
 @login_required
 def delete_resume_view(request, resume_id):
     """Delete resume version"""
-    if request.user.role != 'STUDENT':
+    if request.user.role.upper() != 'STUDENT':
         messages.error(request, 'You do not have access to this page.')
         return redirect('home')
     
@@ -353,18 +310,12 @@ def delete_resume_view(request, resume_id):
         messages.success(request, 'Resume deleted successfully!')
         return redirect('resumes')
     
-    context = {
-        'resume': resume,
-        'student': student,
-    }
-    
-    return render(request, 'students/confirm_delete_resume.html', context)
-
+    return render(request, 'students/confirm_delete_resume.html', {'resume': resume, 'student': student})
 
 @login_required
 def set_current_resume_view(request, resume_id):
     """Set resume as current"""
-    if request.user.role != 'STUDENT':
+    if request.user.role.upper() != 'STUDENT':
         messages.error(request, 'You do not have access to this page.')
         return redirect('home')
     
@@ -375,4 +326,3 @@ def set_current_resume_view(request, resume_id):
     resume.save()
     messages.success(request, f'Resume v{resume.version} set as current!')
     return redirect('resumes')
-

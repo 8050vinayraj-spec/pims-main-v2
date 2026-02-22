@@ -11,7 +11,7 @@
             <h3>Resume Versions ({{ student.resumes.count }})</h3>
         </div>
         <div class="col-md-6 text-end">
-            <a href="{% url 'upload_resume' %}" class="btn btn-primary">+ Upload Resume</a>
+            <a href="{% url 'students:upload_resume' %}" class="btn btn-primary">+ Upload Resume</a>
         </div>
     </div>
 
@@ -46,9 +46,9 @@
                             <td><small class="text-muted">{{ resume.uploaded_at|date:"M d, Y" }}</small></td>
                             <td>
                                 {% if not resume.is_current %}
-                                    <a href="{% url 'set_current_resume' resume.id %}" class="btn btn-sm btn-outline-primary">Set Current</a>
+                                    <a href="{% url 'students:set_current_resume' resume_id=resume.id %}" class="btn btn-sm btn-outline-primary">Set Current</a>
                                 {% endif %}
-                                <a href="{% url 'delete_resume' resume.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                                <a href="{% url 'students:delete_resume' resume_id=resume.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
                             </td>
                         </tr>
                     {% endfor %}
@@ -57,7 +57,8 @@
         </div>
     {% else %}
         <div class="alert alert-info">
-            <strong>No resumes uploaded yet.</strong> <a href="{% url 'upload_resume' %}">Upload your first resume</a>
+            <strong>No resumes uploaded yet.</strong> 
+            <a href="{% url 'students:upload_resume' %}">Upload your first resume</a>
         </div>
     {% endif %}
 </div>
