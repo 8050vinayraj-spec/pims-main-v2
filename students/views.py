@@ -2,10 +2,13 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import StudentProfile, AcademicRecord, StudentSkill, Skill, Resume
+from .models import StudentSkill
 from .forms import (
     StudentProfileForm, AcademicRecordForm, StudentSkillForm,
     AddSkillForm, ResumeUploadForm
 )
+
+
 
 # ---------------- Dashboard & Profile ----------------
 
@@ -202,47 +205,29 @@ def skills_view(request):
 
 @login_required
 def add_skill_view(request):
-    """Add skill to profile"""
-    if request.user.role.upper() != 'STUDENT':
-        messages.error(request, 'You do not have access to this page.')
-        return redirect('home')
-    
-    student = get_object_or_404(StudentProfile, user=request.user)
-    
     if request.method == 'POST':
-        if 'skill_id' in request.POST:
-            form = StudentSkillForm(request.POST)
-            if form.is_valid():
-                skill_instance = form.save(commit=False)
-                skill_instance.student = student
-                skill_instance.save()
-                messages.success(request, 'Skill added successfully!')
-                return redirect('skills')
-        else:
-            form = AddSkillForm(request.POST)
-            if form.is_valid():
-                skill_name = form.cleaned_data['skill_name']
-                category = form.cleaned_data['category']
-                proficiency = form.cleaned_data['proficiency']
-                years = form.cleaned_data['years_of_experience']
-                
-                skill, _ = Skill.objects.get_or_create(
-                    name=skill_name,
-                    defaults={'category': category}
-                )
-                
-                StudentSkill.objects.create(
-                    student=student,
-                    skill=skill,
-                    proficiency=proficiency,
-                    years_of_experience=years
-                )
-                messages.success(request, 'Skill added successfully!')
-                return redirect('skills')
-    else:
-        form = StudentSkillForm()
-    
-    return render(request, 'students/add_skill.html', {'form': form, 'student': student})
+        skill_id = request.POST.get('skill')
+        proficiency = request.POST.get('proficiency')
+        years_of_experience = request.POST.get('years_of_experience')
+
+        student = request.user.student
+
+        # Prevent duplicate skill entries
+        if StudentSkill.objects.filter(student=student, skill_id=skill_id).exists():
+            messages.error(request, "You already added this skill.")
+            return redirect('students:skills')
+
+        # Create new skill entry
+        StudentSkill.objects.create(
+            student=student,
+            skill_id=skill_id,
+            proficiency=proficiency,
+            years_of_experience=years_of_experience
+        )
+        messages.success(request, "Skill added successfully.")
+        return redirect('students:skills')
+
+    return render(request, 'students/add_skill.html')
 
 @login_required
 def delete_skill_view(request, skill_id):

@@ -7,16 +7,16 @@ urlpatterns = [
     path('admin/', admin.site.urls),
 
     # Accounts
-    path('', include('accounts.urls')),
+    path('', include(('accounts.urls', 'accounts'), namespace='accounts')),
 
     # Students (with namespace)
-    path('student/', include(('students.urls', 'students'), namespace='students')),
+    path('students/', include(('students.urls', 'students'), namespace='students')),
 
     # Companies
-    path('', include('companies.urls')),
+    path('companies/', include(('companies.urls', 'companies'), namespace='companies')),
 
     # Opportunities
-    path('opportunity/', include('opportunities.urls')),
+    path('opportunity/', include(('opportunities.urls', 'opportunities'), namespace='opportunities')),
 
     # Applications
     path('applications/', include(('applications.urls', 'applications'), namespace='applications')),
@@ -25,16 +25,16 @@ urlpatterns = [
     path('screening/', include(('screening.urls', 'screening'), namespace='screening')),
 
     # Interviews
-    path('interviews/', include('interviews.urls')),
+    path('interviews/', include(('interviews.urls', 'interviews'), namespace='interviews')),
 
     # Decisions
-    path('decisions/', include('decisions.urls')),
+    path('decisions/', include(('decisions.urls', 'decisions'), namespace='decisions')),
 
     # Records
-    path('records/', include('records.urls')),
+    path('records/', include(('records.urls', 'records'), namespace='records')),
 
     # Dashboard
-    path('dashboard/', include('dashboard.urls')),
+    path('dashboard/', include(('dashboard.urls', 'dashboard'), namespace='dashboard')),
 ]
 
 if settings.DEBUG:

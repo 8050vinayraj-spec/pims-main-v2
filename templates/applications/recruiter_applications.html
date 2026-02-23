@@ -45,7 +45,7 @@
                         <td><span class="badge bg-warning">{{ opportunity.shortlisted_applications }}</span></td>
                         <td><span class="badge bg-danger">{{ opportunity.rejected_applications }}</span></td>
                         <td>
-                            <a href="{% url 'applications:applicant_list' opportunity.id %}" class="btn btn-sm btn-outline-primary">
+                            <a href="{% url 'applications:applicant_list' opportunity_id=opportunity.id %}" class="btn btn-sm btn-outline-primary">
                                 View Applicants
                             </a>
                         </td>

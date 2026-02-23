@@ -18,7 +18,7 @@
                     <form method="POST">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-danger w-100 mb-2">Yes, Delete</button>
-                        <a href="{% url 'academic_records' %}" class="btn btn-secondary w-100">Cancel</a>
+                        <a href="{% url 'students:academic_records' %}" class="btn btn-secondary w-100">Cancel</a>
                     </form>
                 </div>
             </div>

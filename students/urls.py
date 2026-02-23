@@ -6,7 +6,7 @@ app_name = 'students'
 
 urlpatterns = [
     # Dashboard & Profile
-    path('dashboard/', views.student_dashboard_view, name='student_dashboard'),
+    path('dashboard/', views.student_dashboard_view, name='student-dashboard'),
     path('profile/', views.profile_view, name='profile'),
 
     # Academic Records
@@ -19,6 +19,7 @@ urlpatterns = [
     path('skills/', views.skills_view, name='skills'),
     path('skills/add/', views.add_skill_view, name='add_skill'),
     path('skills/<int:skill_id>/delete/', views.delete_skill_view, name='delete_skill'),
+
 
     # Resumes
     path('resumes/', views.resumes_view, name='resumes'),

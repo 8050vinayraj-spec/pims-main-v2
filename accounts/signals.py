@@ -4,7 +4,14 @@ from .models import AccountApproval
 
 @receiver(post_save, sender=AccountApproval)
 def sync_user_approval(sender, instance, **kwargs):
+    """
+    Sync AccountApproval status with CustomUser.is_approved.
+    Ensures that whenever an officer approves/rejects a user,
+    the CustomUser flag is updated immediately.
+    """
     approved = (instance.status == 'APPROVED')
-    instance.user.is_approved = approved
-    instance.user.save(update_fields=['is_approved'])
-    print(f"🔥 Signal fired for {instance.user.username}: is_approved={approved}")
+    user = instance.user
+
+    if user.is_approved != approved:
+        user.is_approved = approved
+        user.save(update_fields=['is_approved'])

@@ -86,7 +86,7 @@
                                 </td>
                                 <td><small>{{ app.applied_at|date:"d M, Y" }}</small></td>
                                 <td>
-                                    <a href="{% url 'applications:applicant_list' app.opportunity.id %}" class="btn btn-sm btn-primary">
+                                    <a href="{% url 'applications:applicant_list' opportunity_id=app.opportunity.id %}" class="btn btn-sm btn-primary">
                                         <i class="fas fa-eye"></i> View
                                     </a>
                                 </td>
