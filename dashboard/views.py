@@ -1,20 +1,22 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseForbidden, JsonResponse
+from django.http import HttpResponseForbidden, JsonResponse, HttpResponse
 from django.db.models import Count, Avg, Q
 from django.utils import timezone
-from decimal import Decimal, InvalidOperation
+from django.contrib import messages
+
+import csv
 import re
 from datetime import timedelta
+from decimal import Decimal, InvalidOperation
+
 from accounts.models import CustomUser
-from companies.models import RecruiterProfile, Company
 from students.models import StudentProfile
 from opportunities.models import Opportunity
 from applications.models import Application
 from screening.models import ScreeningResult
 from decisions.models import HiringDecision, OfferResponse
 from records.models import PlacementRecord
-
 
 def _parse_package(ctc_or_stipend):
     if not ctc_or_stipend:
@@ -67,35 +69,29 @@ def _sync_placements_from_accepted_offers():
 
 @login_required
 def officer_dashboard_view(request):
-    """Dashboard for placement officers"""
     if not (hasattr(request.user, 'role') and request.user.role == 'OFFICER'):
         return HttpResponseForbidden("Only officers can access this.")
 
     _sync_application_statuses()
     _sync_placements_from_accepted_offers()
-    
-    # Overall statistics
+
     total_students = StudentProfile.objects.count()
     total_companies = Company.objects.count()
     total_opportunities = Opportunity.objects.filter(status='PUBLISHED').count()
     total_applications = Application.objects.count()
-    
-    # Placement statistics
+
     placed_students = PlacementRecord.objects.values('student').distinct().count()
     placement_rate = (placed_students / total_students * 100) if total_students > 0 else 0
-    
-    # Pending approvals
+
     pending_companies = Company.objects.filter(verified=False).count()
     pending_recruiters = CustomUser.objects.filter(role='RECRUITER', is_approved=False).count()
-    
-    # Recent applications
+
     recent_applications = Application.objects.select_related(
         'student', 'opportunity', 'opportunity__company', 'hiring_decision', 'hiring_decision__offer_response'
     ).order_by('-applied_at')[:10]
-    
-    # Average package
+
     avg_package = PlacementRecord.objects.aggregate(avg=Avg('package'))['avg'] or 0
-    
+
     context = {
         'total_students': total_students,
         'total_companies': total_companies,
@@ -112,48 +108,66 @@ def officer_dashboard_view(request):
 
 
 @login_required
+def officer_approval_view(request):
+    """Officer view to approve recruiters"""
+    if not (hasattr(request.user, 'role') and request.user.role == 'OFFICER'):
+        return HttpResponseForbidden("Only officers can access this.")
+
+    pending_recruiters = CustomUser.objects.filter(role='RECRUITER', is_approved=False)
+
+    context = {
+        'pending_recruiters': pending_recruiters,
+        'page_title': 'Recruiter Approvals',
+    }
+    return render(request, 'dashboard/officer_approval.html', context)
+
+
+@login_required
+def verify_company_view(request):
+    if not (hasattr(request.user, 'role') and request.user.role == 'OFFICER'):
+        return HttpResponseForbidden("Only officers can access this.")
+
+    companies = Company.objects.filter(verified=False)
+
+    context = {
+        'companies': companies,
+        'page_title': 'Verify Companies',
+    }
+    return render(request, 'dashboard/verify_company.html', context)
+
+
+
+
+
+
+
+@login_required
 def recruiter_dashboard_view(request):
-    """Dashboard for recruiters"""
-    try:
-        recruiter = RecruiterProfile.objects.get(user=request.user)
-    except RecruiterProfile.DoesNotExist:
+    user = request.user
+
+    if user.role.upper() != 'RECRUITER':
+        messages.error(request, "Only recruiters can access this page.")
         return HttpResponseForbidden("Only recruiters can access this.")
-    
-    company = recruiter.company
-    
-    # Company opportunities
+
+    if not user.is_approved:
+        messages.warning(request, "Your recruiter account is not yet approved.")
+        return render(request, 'accounts/approval_pending.html')
+
+    company = user.company
+    if not company:
+        messages.error(request, "No company is associated with your account.")
+        return HttpResponseForbidden("No company assigned to this recruiter.")
+
     total_opportunities = Opportunity.objects.filter(company=company).count()
-    published_opportunities = Opportunity.objects.filter(
-        company=company,
-        status='PUBLISHED'
-    ).count()
-    
-    # Application statistics
-    total_applications = Application.objects.filter(
-        opportunity__company=company
-    ).count()
-    shortlisted = Application.objects.filter(
-        opportunity__company=company,
-        status='SHORTLISTED'
-    ).count()
-    
-    # Hiring decisions
-    selected = HiringDecision.objects.filter(
-        application__opportunity__company=company,
-        result='SELECTED'
-    ).count()
-    
-    # Offers accepted
-    accepted_offers = OfferResponse.objects.filter(
-        decision__application__opportunity__company=company,
-        response='ACCEPTED'
-    ).count()
-    
-    # Recent applications
-    recent_applications = Application.objects.filter(
-        opportunity__company=company
-    ).select_related('student', 'opportunity').order_by('-applied_at')[:10]
-    
+    published_opportunities = Opportunity.objects.filter(company=company, status='PUBLISHED').count()
+    total_applications = Application.objects.filter(opportunity__company=company).count()
+    shortlisted = Application.objects.filter(opportunity__company=company, status='SHORTLISTED').count()
+    selected = HiringDecision.objects.filter(application__opportunity__company=company, result='SELECTED').count()
+    accepted_offers = OfferResponse.objects.filter(decision__application__opportunity__company=company, response='ACCEPTED').count()
+
+    recent_applications = Application.objects.filter(opportunity__company=company).select_related(
+        'student', 'opportunity').order_by('-applied_at')[:10]
+
     context = {
         'company': company,
         'total_opportunities': total_opportunities,
@@ -164,36 +178,26 @@ def recruiter_dashboard_view(request):
         'accepted_offers': accepted_offers,
         'recent_applications': recent_applications,
     }
+
     return render(request, 'dashboard/recruiter_dashboard.html', context)
-
-
 @login_required
 def student_dashboard_view(request):
-    """Dashboard for students"""
     try:
         student = StudentProfile.objects.get(user=request.user)
     except StudentProfile.DoesNotExist:
         return HttpResponseForbidden("Only students can access this.")
-    
-    # Get student's applications with their decision and offer response status
+
     applications_qs = Application.objects.filter(student=student).select_related(
         'opportunity', 'opportunity__company'
-    )
-    
-    # Get all applications with proper prefetching
-    applications = list(applications_qs.prefetch_related('hiring_decision__offer_response', 'screening_result', 'slot_assignment'))
-    
-    # Calculate statistics from the list
+    ).prefetch_related('hiring_decision__offer_response', 'screening_result', 'slot_assignment')
+
+    applications = list(applications_qs)
+
     total_applications = len(applications)
     shortlisted = sum(1 for app in applications if app.status == 'SHORTLISTED')
     rejected = sum(1 for app in applications if app.status == 'REJECTED')
-    offers_made = sum(
-        1
-        for app in applications
-        if getattr(app, 'hiring_decision', None) and app.hiring_decision.result == 'SELECTED'
-    )
-    
-    # Safely count accepted offers using getattr
+    offers_made = sum(1 for app in applications if getattr(app, 'hiring_decision', None) and app.hiring_decision.result == 'SELECTED')
+
     accepted_offers = 0
     for app in applications:
         decision = getattr(app, 'hiring_decision', None)
@@ -201,19 +205,13 @@ def student_dashboard_view(request):
             offer_response = getattr(decision, 'offer_response', None)
             if offer_response and offer_response.response == 'ACCEPTED':
                 accepted_offers += 1
-    
-    # Screening results
-    screening_results = ScreeningResult.objects.filter(
-        application__student=student
-    ).select_related('application__opportunity')
-    
+
+    screening_results = ScreeningResult.objects.filter(application__student=student).select_related('application__opportunity')
     eligible = screening_results.filter(result='ELIGIBLE').count()
     not_eligible = screening_results.filter(result='NOT_ELIGIBLE').count()
-    
-    # Placement records
+
     placements = PlacementRecord.objects.filter(student=student)
-    
-    # Pending offers - SELECTED but not yet responded
+
     pending_offers = []
     for app in applications:
         decision = getattr(app, 'hiring_decision', None)
@@ -221,7 +219,7 @@ def student_dashboard_view(request):
             offer_response = getattr(decision, 'offer_response', None)
             if not offer_response or offer_response.response not in ['ACCEPTED', 'REJECTED']:
                 pending_offers.append(app)
-    
+
     context = {
         'student': student,
         'applications': applications,
@@ -241,20 +239,15 @@ def student_dashboard_view(request):
 
 @login_required
 def analytics_export_view(request):
-    """Export analytics data (CSV)"""
     if not (hasattr(request.user, 'role') and request.user.role == 'OFFICER'):
         return HttpResponseForbidden("Only officers can export data.")
-    
-    import csv
-    from django.http import HttpResponse
-    
-    # Create response
+
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="placements.csv"'
-    
+
     writer = csv.writer(response)
     writer.writerow(['Student Name', 'Roll Number', 'Company', 'Position', 'Package (LPA)', 'Year'])
-    
+
     records = PlacementRecord.objects.select_related('student', 'company')
     for record in records:
         writer.writerow([
@@ -265,6 +258,5 @@ def analytics_export_view(request):
             record.package,
             record.placement_year,
         ])
-    
-    return response
 
+    return response  # ✅ This line ensures the view returns a valid HttpResponse

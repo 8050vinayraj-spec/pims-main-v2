@@ -3,6 +3,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import StudentProfile, AcademicRecord, StudentSkill, Skill, Resume
 from .models import StudentSkill
+
+from students.models import StudentProfile, Skill
+from students.models import StudentProfile  # Add this if it's missing
 from .forms import (
     StudentProfileForm, AcademicRecordForm, StudentSkillForm,
     AddSkillForm, ResumeUploadForm
@@ -120,77 +123,95 @@ def profile_view(request):
 
 # ---------------- Academic Records ----------------
 
+
+
 @login_required
 def academic_records_view(request):
     if request.user.role.upper() != 'STUDENT':
         messages.error(request, 'You do not have access to this page.')
-        return redirect('home')
+        return redirect('accounts:home')  # ✅ namespaced
+
     student = get_object_or_404(StudentProfile, user=request.user)
     academic_records = student.academic_records.all()
+
     return render(request, 'students/academic_records.html', {
         'student': student,
         'academic_records': academic_records,
     })
-
 @login_required
 def add_academic_record_view(request):
     """Add academic record"""
     if request.user.role.upper() != 'STUDENT':
         messages.error(request, 'You do not have access to this page.')
-        return redirect('home')
-    
+        return redirect('accounts:home')
+
     student = get_object_or_404(StudentProfile, user=request.user)
-    
+
     if request.method == 'POST':
         form = AcademicRecordForm(request.POST)
         if form.is_valid():
+            semester = form.cleaned_data['semester']
+            if AcademicRecord.objects.filter(student=student, semester=semester).exists():
+                messages.error(request, f"A record for Semester {semester} already exists.")
+                return redirect('students:academic_records')
+
             record = form.save(commit=False)
             record.student = student
             record.save()
             messages.success(request, f'Semester {record.semester} record added successfully!')
-            return redirect('academic_records')
+            return redirect('students:academic_records')
     else:
         form = AcademicRecordForm()
-    
-    return render(request, 'students/add_academic_record.html', {'form': form, 'student': student})
+
+    return render(request, 'students/add_academic_record.html', {
+        'form': form,
+        'student': student
+    })
 
 @login_required
 def edit_academic_record_view(request, record_id):
     """Edit existing academic record"""
     if request.user.role.upper() != 'STUDENT':
         messages.error(request, 'You do not have access to this page.')
-        return redirect('home')
-    
+        return redirect('accounts:home')  # ✅ namespaced
+
     student = get_object_or_404(StudentProfile, user=request.user)
     record = get_object_or_404(AcademicRecord, id=record_id, student=student)
-    
+
     if request.method == 'POST':
         form = AcademicRecordForm(request.POST, instance=record)
         if form.is_valid():
             form.save()
             messages.success(request, 'Record updated successfully!')
-            return redirect('academic_records')
+            return redirect('students:academic_records')  # ✅ namespaced
     else:
         form = AcademicRecordForm(instance=record)
-    
-    return render(request, 'students/add_academic_record.html', {'form': form, 'student': student, 'record': record})
+
+    return render(request, 'students/add_academic_record.html', {
+        'form': form,
+        'student': student,
+        'record': record
+    })
 
 @login_required
 def delete_academic_record_view(request, record_id):
     """Delete academic record"""
     if request.user.role.upper() != 'STUDENT':
         messages.error(request, 'You do not have access to this page.')
-        return redirect('home')
-    
+        return redirect('accounts:home')  # ✅ namespaced
+
     student = get_object_or_404(StudentProfile, user=request.user)
     record = get_object_or_404(AcademicRecord, id=record_id, student=student)
-    
+
     if request.method == 'POST':
         record.delete()
         messages.success(request, 'Record deleted successfully!')
-        return redirect('academic_records')
-    
-    return render(request, 'students/confirm_delete_record.html', {'record': record, 'student': student})
+        return redirect('students:academic_records')  # ✅ namespaced
+
+    return render(request, 'students/confirm_delete_record.html', {
+        'record': record,
+        'student': student
+    })
 
 # ---------------- Skills ----------------
 
@@ -203,6 +224,7 @@ def skills_view(request):
     skills = student.skills.all()
     return render(request, 'students/skills.html', {'student': student, 'skills': skills})
 
+
 @login_required
 def add_skill_view(request):
     if request.method == 'POST':
@@ -210,17 +232,28 @@ def add_skill_view(request):
         proficiency = request.POST.get('proficiency')
         years_of_experience = request.POST.get('years_of_experience')
 
-        student = request.user.student
+        try:
+            student = StudentProfile.objects.get(user=request.user)
+        except StudentProfile.DoesNotExist:
+            messages.error(request, "No student profile found for this user.")
+            return redirect('students:skills')
+
+        if not skill_id:
+            messages.error(request, "Please select a skill.")
+            return redirect('students:skills')
+
+        # Ensure the skill exists
+        skill = get_object_or_404(Skill, id=skill_id)
 
         # Prevent duplicate skill entries
-        if StudentSkill.objects.filter(student=student, skill_id=skill_id).exists():
+        if StudentSkill.objects.filter(student=student, skill=skill).exists():
             messages.error(request, "You already added this skill.")
             return redirect('students:skills')
 
         # Create new skill entry
         StudentSkill.objects.create(
             student=student,
-            skill_id=skill_id,
+            skill=skill,
             proficiency=proficiency,
             years_of_experience=years_of_experience
         )
@@ -236,6 +269,7 @@ def delete_skill_view(request, skill_id):
         messages.error(request, 'You do not have access to this page.')
         return redirect('home')
     
+
 # ---------------- Resumes ----------------
 
 @login_required
@@ -243,11 +277,11 @@ def resumes_view(request):
     """View and manage resumes"""
     if request.user.role.upper() != 'STUDENT':
         messages.error(request, 'You do not have access to this page.')
-        return redirect('home')
-    
+        return redirect('accounts:home')  # ✅ namespaced
+
     student = get_object_or_404(StudentProfile, user=request.user)
     resumes = student.resumes.all()
-    
+
     return render(request, 'students/resumes.html', {
         'student': student,
         'resumes': resumes,
@@ -258,26 +292,26 @@ def upload_resume_view(request):
     """Upload new resume version"""
     if request.user.role.upper() != 'STUDENT':
         messages.error(request, 'You do not have access to this page.')
-        return redirect('home')
-    
+        return redirect('accounts:home')  # ✅ namespaced
+
     student = get_object_or_404(StudentProfile, user=request.user)
-    
+
     if request.method == 'POST':
         form = ResumeUploadForm(request.POST, request.FILES)
         if form.is_valid():
             resume = form.save(commit=False)
             resume.student = student
-            
+
             # Calculate version number
             last_version = student.resumes.order_by('-version').first()
             resume.version = (last_version.version if last_version else 0) + 1
-            
+
             resume.save()
             messages.success(request, f'Resume v{resume.version} uploaded successfully!')
-            return redirect('resumes')
+            return redirect('students:resumes')  # ✅ namespaced
     else:
         form = ResumeUploadForm()
-    
+
     return render(request, 'students/upload_resume.html', {'form': form, 'student': student})
 
 @login_required
@@ -285,16 +319,16 @@ def delete_resume_view(request, resume_id):
     """Delete resume version"""
     if request.user.role.upper() != 'STUDENT':
         messages.error(request, 'You do not have access to this page.')
-        return redirect('home')
-    
+        return redirect('accounts:home')  # ✅ namespaced
+
     student = get_object_or_404(StudentProfile, user=request.user)
     resume = get_object_or_404(Resume, id=resume_id, student=student)
-    
+
     if request.method == 'POST':
         resume.delete()
         messages.success(request, 'Resume deleted successfully!')
-        return redirect('resumes')
-    
+        return redirect('students:resumes')  # ✅ namespaced
+
     return render(request, 'students/confirm_delete_resume.html', {'resume': resume, 'student': student})
 
 @login_required
@@ -302,12 +336,12 @@ def set_current_resume_view(request, resume_id):
     """Set resume as current"""
     if request.user.role.upper() != 'STUDENT':
         messages.error(request, 'You do not have access to this page.')
-        return redirect('home')
-    
+        return redirect('accounts:home')  # ✅ namespaced
+
     student = get_object_or_404(StudentProfile, user=request.user)
     resume = get_object_or_404(Resume, id=resume_id, student=student)
-    
+
     resume.is_current = True
     resume.save()
     messages.success(request, f'Resume v{resume.version} set as current!')
-    return redirect('resumes')
+    return redirect('students:resumes')  # ✅ namespaced

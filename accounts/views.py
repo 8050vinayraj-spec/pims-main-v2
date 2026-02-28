@@ -10,8 +10,8 @@ from students.models import StudentProfile
 
 def signup_view(request):
     if request.user.is_authenticated:
-        return redirect('home')
-    
+        return redirect('accounts:home')  # ✅ namespaced
+
     if request.method == 'POST':
         form = SignupForm(request.POST)
         if form.is_valid():
@@ -21,33 +21,33 @@ def signup_view(request):
             user.save()
             AccountApproval.objects.create(user=user, status='PENDING')
             messages.success(request, 'Account created successfully! Awaiting officer approval.')
-            return redirect('approval_pending')
+            return redirect('accounts:approval_pending')  # ✅ namespaced
     else:
         form = SignupForm()
-    
+
     return render(request, 'accounts/signup.html', {'form': form})
 
 # ---------------- Login ----------------
 
 def login_view(request):
     if request.user.is_authenticated:
-        return redirect('home')
-    
+        return redirect('accounts:home')  # ✅ namespaced
+
     if request.method == 'POST':
         form = LoginForm(request.POST)
         if form.is_valid():
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
             user = authenticate(request, username=username, password=password)
-            
+
             if user is not None:
                 if not user.is_approved:
                     messages.warning(request, 'Your account is pending approval. Please wait.')
-                    return redirect('approval_pending')
-                
+                    return redirect('accounts:approval_pending')  # ✅ namespaced
+
                 login(request, user)
                 LoginActivity.objects.create(user=user)
-                
+
                 if user.role.upper() == 'OFFICER':
                     return redirect('dashboard:officer-dashboard')
                 elif user.role.upper() == 'RECRUITER':
@@ -61,26 +61,27 @@ def login_view(request):
                         return redirect('students:complete_profile')
                 else:
                     messages.error(request, 'Invalid role assigned to user.')
-                    return redirect('login')
+                    return redirect('accounts:login')  # ✅ namespaced
             else:
                 messages.error(request, 'Invalid username or password.')
     else:
         form = LoginForm()
-    
+
     return render(request, 'accounts/login.html', {'form': form})
 
 # ---------------- Logout ----------------
 
+
+
 def logout_view(request):
     logout(request)
-    messages.success(request, 'Logged out successfully.')
-    return redirect('login')
+    return redirect('accounts:login')  # ✅ Use the correct namespace
 
 # ---------------- Approval Pending ----------------
 
 def approval_pending_view(request):
     if request.user.is_authenticated:
-        return redirect('home')
+        return redirect('accounts:home')  # ✅ namespaced
     return render(request, 'accounts/approval_pending.html')
 
 # ---------------- Officer Approval ----------------
@@ -89,13 +90,13 @@ def approval_pending_view(request):
 def officer_approval_view(request):
     if request.user.role.upper() != 'OFFICER':
         messages.error(request, 'You do not have permission to access this page.')
-        return redirect('home')
-    
+        return redirect('accounts:home')  # ✅ namespaced
+
     if request.method == 'POST':
         approval_id = request.POST.get('approval_id')
         approval = get_object_or_404(AccountApproval, id=approval_id)
         form = ApprovalActionForm(request.POST)
-        
+
         if form.is_valid():
             action = form.cleaned_data.get('action')
             if action == 'APPROVE':
@@ -113,9 +114,9 @@ def officer_approval_view(request):
                 approval.user.is_approved = False
                 approval.user.save(update_fields=['is_approved'])
                 messages.info(request, f"User {approval.user.username} rejected.")
-            
-            return redirect('officer_approval')
-    
+
+            return redirect('accounts:officer_approval')  # ✅ namespaced
+
     context = {
         'pending_approvals': AccountApproval.objects.filter(status='PENDING'),
         'approved_approvals': AccountApproval.objects.filter(status='APPROVED'),
@@ -139,4 +140,4 @@ def home_view(request):
             return redirect('students:complete_profile')
     else:
         messages.error(request, 'Invalid role assigned to user.')
-        return redirect('login')
+        return redirect('accounts:login')  # ✅ namespaced

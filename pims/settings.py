@@ -151,7 +151,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
 # Login URL
-LOGIN_URL = 'login'
+LOGIN_URL = 'accounts:login'
 LOGIN_REDIRECT_URL = 'home'
 
 CSRF_TRUSTED_ORIGINS = [

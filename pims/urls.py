@@ -6,10 +6,12 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    # Accounts
-    path('', include(('accounts.urls', 'accounts'), namespace='accounts')),
+    # Accounts (root path, namespaced)
 
-    # Students (with namespace)
+    path('', include(('accounts.urls', 'accounts'), namespace='accounts')),
+    
+
+    # Students
     path('students/', include(('students.urls', 'students'), namespace='students')),
 
     # Companies
@@ -33,10 +35,12 @@ urlpatterns = [
     # Records
     path('records/', include(('records.urls', 'records'), namespace='records')),
 
-    # Dashboard
-    path('dashboard/', include(('dashboard.urls', 'dashboard'), namespace='dashboard')),
+    # Dashboard (correctly namespaced)
+   path('dashboard/', include(('dashboard.urls', 'dashboard'), namespace='dashboard')),
+
 ]
 
+# Static and media files (only in development)
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

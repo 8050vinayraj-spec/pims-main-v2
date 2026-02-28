@@ -1,7 +1,5 @@
 from django.db import models
 from django.core.validators import URLValidator
-from accounts.models import CustomUser
-
 
 class Company(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -25,7 +23,7 @@ class Company(models.Model):
     )
     verified = models.BooleanField(default=False)
     verified_by = models.ForeignKey(
-        CustomUser,
+        'accounts.CustomUser',  # ✅ Use string reference to avoid circular import
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -43,7 +41,7 @@ class Company(models.Model):
 
 
 class RecruiterProfile(models.Model):
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='recruiter_profile')
+    user = models.OneToOneField('accounts.CustomUser', on_delete=models.CASCADE, related_name='recruiter_profile')  # ✅ Use string reference
     company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='recruiters')
     designation = models.CharField(max_length=100)
     phone = models.CharField(max_length=15, blank=True)
@@ -68,4 +66,3 @@ class CompanyHistory(models.Model):
 
     def __str__(self):
         return f"{self.company.name} - {self.past_hires} hires"
-

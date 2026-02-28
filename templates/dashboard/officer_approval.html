@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Recruiter Approvals{% endblock %}
+
+{% block content %}
+<h2>Pending Recruiter Approvals</h2>
+
+{% if pending_recruiters %}
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Company</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for recruiter in pending_recruiters %}
+                <tr>
+                    <td>{{ recruiter.get_full_name }}</td>
+                    <td>{{ recruiter.email }}</td>
+                    <td>{{ recruiter.recruiterprofile.company.name }}</td>
+                    <td>
+                        <!-- You can wire these up to actual approval logic later -->
+                        <button class="btn btn-success btn-sm">Approve</button>
+                        <button class="btn btn-danger btn-sm">Reject</button>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>No pending recruiter approvals at the moment.</p>
+{% endif %}
+{% endblock %}

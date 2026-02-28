@@ -1,8 +1,7 @@
 from django.urls import path
 from . import views
 
-# Register namespace for reverse lookups
-app_name = 'students'
+app_name = 'students'  # Enables namespaced URL reversing like 'students:skills'
 
 urlpatterns = [
     # Dashboard & Profile
@@ -20,13 +19,12 @@ urlpatterns = [
     path('skills/add/', views.add_skill_view, name='add_skill'),
     path('skills/<int:skill_id>/delete/', views.delete_skill_view, name='delete_skill'),
 
-
     # Resumes
     path('resumes/', views.resumes_view, name='resumes'),
     path('resumes/upload/', views.upload_resume_view, name='upload_resume'),
     path('resumes/<int:resume_id>/delete/', views.delete_resume_view, name='delete_resume'),
     path('resumes/<int:resume_id>/set-current/', views.set_current_resume_view, name='set_current_resume'),
 
-    # Profile completion
+    # Profile Completion
     path('complete-profile/', views.complete_profile_view, name='complete_profile'),
 ]

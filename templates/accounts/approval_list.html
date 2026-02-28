@@ -31,7 +31,7 @@
                                 <strong>Applied:</strong> {{ approval.created_at|date:"M d, Y H:i" }}
                             </p>
                             
-                            <form method="POST" action="{% url 'officer_approval' %}">
+                            <form method="POST" action="{% url 'accounts:officer_approval' %}">
                                 {% csrf_token %}
                                 <input type="hidden" name="approval_id" value="{{ approval.id }}">
                                 

@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Verify Companies{% endblock %}
+
+{% block content %}
+<h2>Pending Company Verifications</h2>
+
+{% if companies %}
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Company Name</th>
+                <th>Website</th>
+                <th>Recruiter</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for company in companies %}
+                <tr>
+                    <td>{{ company.name }}</td>
+                    <td><a href="{{ company.website }}" target="_blank">{{ company.website }}</a></td>
+                    <td>{{ company.recruiter.user.get_full_name }}</td>
+                    <td>
+                        <button class="btn btn-success btn-sm">Verify</button>
+                        <button class="btn btn-danger btn-sm">Reject</button>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>No companies pending verification.</p>
+{% endif %}
+{% endblock %}
