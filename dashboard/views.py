@@ -4,6 +4,7 @@ from django.http import HttpResponseForbidden, JsonResponse, HttpResponse
 from django.db.models import Count, Avg, Q
 from django.utils import timezone
 from django.contrib import messages
+from companies.models import Company
 
 import csv
 import re
@@ -135,12 +136,6 @@ def verify_company_view(request):
     }
     return render(request, 'dashboard/verify_company.html', context)
 
-
-
-
-
-
-
 @login_required
 def recruiter_dashboard_view(request):
     user = request.user
@@ -153,10 +148,10 @@ def recruiter_dashboard_view(request):
         messages.warning(request, "Your recruiter account is not yet approved.")
         return render(request, 'accounts/approval_pending.html')
 
-    company = user.company
+    company = getattr(user, 'company', None)
     if not company:
         messages.error(request, "No company is associated with your account.")
-        return HttpResponseForbidden("No company assigned to this recruiter.")
+        return render(request, 'dashboard/no_company_assigned.html')  # Optional: use a template instead of raw 403
 
     total_opportunities = Opportunity.objects.filter(company=company).count()
     published_opportunities = Opportunity.objects.filter(company=company, status='PUBLISHED').count()

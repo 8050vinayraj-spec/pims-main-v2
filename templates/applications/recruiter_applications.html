@@ -1,65 +1,91 @@
 {% extends 'base.html' %}
 
-{% block title %}Applications - {{ company.name }}{% endblock %}
+{% block title %}Applications{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
     <div class="row mb-4">
         <div class="col">
             <h2>Applications</h2>
-            <p class="text-muted">{{ company.name }} - Opportunities Overview</p>
+            <p class="text-muted">View applications by selecting a company</p>
         </div>
     </div>
 
-    {% if opportunities %}
-    <div class="card">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>Opportunity</th>
-                        <th>Status</th>
-                        <th>Total</th>
-                        <th>Shortlisted</th>
-                        <th>Rejected</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for opportunity in opportunities %}
-                    <tr>
-                        <td>
-                            <strong>{{ opportunity.title }}</strong><br>
-                            <small class="text-muted">{{ opportunity.get_type_display }}</small>
-                        </td>
-                        <td>
-                            {% if opportunity.status == 'PUBLISHED' %}
-                                <span class="badge bg-success">Published</span>
-                            {% elif opportunity.status == 'DRAFT' %}
-                                <span class="badge bg-secondary">Draft</span>
-                            {% else %}
-                                <span class="badge bg-danger">Closed</span>
-                            {% endif %}
-                        </td>
-                        <td><span class="badge bg-primary">{{ opportunity.total_applications }}</span></td>
-                        <td><span class="badge bg-warning">{{ opportunity.shortlisted_applications }}</span></td>
-                        <td><span class="badge bg-danger">{{ opportunity.rejected_applications }}</span></td>
-                        <td>
-                            <a href="{% url 'applications:applicant_list' opportunity_id=opportunity.id %}" class="btn btn-sm btn-outline-primary">
-                                View Applicants
-                            </a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <!-- Company Selection Form -->
+    <form method="post" class="mb-4">
+        {% csrf_token %}
+        <div class="row">
+            <div class="col-md-6">
+                {{ form.company.label_tag }}
+                {{ form.company }}
+                {% if form.company.errors %}
+                    <div class="text-danger small">{{ form.company.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">View Applications</button>
+            </div>
         </div>
-    </div>
-    {% else %}
-    <div class="alert alert-info" role="alert">
-        <i class="fas fa-info-circle"></i>
-        No opportunities found.
-    </div>
+    </form>
+
+    {% if selected_company %}
+        <div class="row mb-3">
+            <div class="col">
+                <h5 class="mb-0">Applications for {{ selected_company.name }}</h5>
+                <p class="text-muted">{{ selected_company.get_industry_display }} | {{ selected_company.city }}</p>
+            </div>
+        </div>
+
+        {% if opportunities %}
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Opportunity</th>
+                                <th>Status</th>
+                                <th>Total</th>
+                                <th>Shortlisted</th>
+                                <th>Rejected</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for opportunity in opportunities %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ opportunity.title }}</strong><br>
+                                        <small class="text-muted">{{ opportunity.get_type_display }}</small>
+                                    </td>
+                                    <td>
+                                        {% if opportunity.status == 'PUBLISHED' %}
+                                            <span class="badge bg-success">Published</span>
+                                        {% elif opportunity.status == 'DRAFT' %}
+                                            <span class="badge bg-secondary">Draft</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Closed</span>
+                                        {% endif %}
+                                    </td>
+                                    <td><span class="badge bg-primary">{{ opportunity.total_applications }}</span></td>
+                                    <td><span class="badge bg-warning">{{ opportunity.shortlisted_applications }}</span></td>
+                                    <td><span class="badge bg-danger">{{ opportunity.rejected_applications }}</span></td>
+                                    <td>
+                                        <a href="{% url 'applications:applicant_list' opportunity_id=opportunity.id %}" class="btn btn-sm btn-outline-primary">
+                                            View Applicants
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% else %}
+            <div class="alert alert-info" role="alert">
+                <i class="fas fa-info-circle"></i>
+                No opportunities found for {{ selected_company.name }}.
+            </div>
+        {% endif %}
     {% endif %}
 </div>
 {% endblock %}

@@ -382,8 +382,8 @@
                 </div>
                 <div class="sidebar-section">
                     <div class="sidebar-section-title">Hiring</div>
-                    <a href="{% url 'company_list' %}"><i class="fas fa-building"></i> Companies</a>
-                    <a href="{% url 'opportunity_list' %}"><i class="fas fa-briefcase"></i> Opportunities</a>
+                    <a href="{% url 'companies:company_list' %}"><i class="fas fa-building"></i> Companies</a>
+                    <a href="{% url 'opportunities:opportunity_list' %}"><i class="fas fa-briefcase"></i> Opportunities</a>
                     <a href="{% url 'applications:recruiter_applications' %}"><i class="fas fa-users"></i> Applications</a>
                 </div>
             {% elif user.role == 'STUDENT' %}

@@ -16,6 +16,16 @@
                     <form method="POST">
                         {% csrf_token %}
 
+                        {% if not opportunity %}
+                            <div class="mb-3">
+                                <label class="form-label">Select Company *</label>
+                                {{ company_form.company }}
+                                {% if company_form.company.errors %}
+                                    <div class="text-danger small">{{ company_form.company.errors }}</div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Title *</label>
@@ -63,7 +73,7 @@
                         <button type="submit" class="btn btn-primary w-100 mb-2">
                             {% if opportunity %}Update Opportunity{% else %}Create Opportunity{% endif %}
                         </button>
-                        <a href="{% url 'opportunity_list' %}" class="btn btn-secondary w-100">Cancel</a>
+                        <a href="{% url 'opportunities:opportunity_list' %}" class="btn btn-secondary w-100">Cancel</a>
                     </form>
                 </div>
             </div>
@@ -72,7 +82,7 @@
                 <div class="card mt-4">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">Required Skills</h5>
-                        <a href="{% url 'add_required_skill' opportunity.id %}" class="btn btn-sm btn-primary">+ Add Skill</a>
+                        <a href="{% url 'opportunities:add_required_skill' opportunity.id %}" class="btn btn-sm btn-primary">+ Add Skill</a>
                     </div>
                     <div class="card-body">
                         {% if opportunity.required_skills.all %}
@@ -89,7 +99,7 @@
                                             <tr>
                                                 <td>{{ skill.skill.name }}</td>
                                                 <td>
-                                                    <a href="{% url 'delete_required_skill' skill.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                                                    <a href="{% url 'opportunities:delete_required_skill' skill.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
                                                 </td>
                                             </tr>
                                         {% endfor %}

@@ -23,7 +23,7 @@ class Company(models.Model):
     )
     verified = models.BooleanField(default=False)
     verified_by = models.ForeignKey(
-        'accounts.CustomUser',  # ✅ Use string reference to avoid circular import
+        'accounts.CustomUser',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -41,8 +41,16 @@ class Company(models.Model):
 
 
 class RecruiterProfile(models.Model):
-    user = models.OneToOneField('accounts.CustomUser', on_delete=models.CASCADE, related_name='recruiter_profile')  # ✅ Use string reference
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='recruiters')
+    user = models.ForeignKey(
+        'accounts.CustomUser',
+        on_delete=models.CASCADE,
+        related_name='recruiter_profiles'  # ✅ allows multiple profiles per user
+    )
+    company = models.ForeignKey(
+        Company,
+        on_delete=models.CASCADE,
+        related_name='recruiters'  # ✅ allows multiple recruiters per company
+    )
     designation = models.CharField(max_length=100)
     phone = models.CharField(max_length=15, blank=True)
     verified = models.BooleanField(default=False)
