@@ -35,16 +35,16 @@
                             </p>
 
                             <!-- Verify Form -->
-<form method="post" action="{% url 'companies:verify_company' company.id %}" style="display:inline;">
-    {% csrf_token %}
-    <button type="submit" class="btn btn-success btn-sm w-100 mb-2">Verify</button>
-</form>
+                            <form method="post" action="{% url 'companies:verify_company' company.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success btn-sm w-100 mb-2">Verify</button>
+                            </form>
 
-<!-- Reject Form -->
-<form method="post" action="{% url 'companies:reject_company' company.id %}" style="display:inline;">
-    {% csrf_token %}
-    <button type="submit" class="btn btn-danger btn-sm w-100">Reject</button>
-</form>
+                            <!-- Reject Form -->
+                            <form method="post" action="{% url 'companies:reject_company' company.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm w-100">Reject</button>
+                            </form>
                         </div>
                     </div>
                 </div>

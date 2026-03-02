@@ -1,7 +1,7 @@
 from django.urls import path
 from . import views
 
-app_name = 'students'  # Enables namespaced URL reversing like 'students:skills'
+app_name = 'students'  # Enables namespaced URL reversing like 'students:profile'
 
 urlpatterns = [
     # Dashboard & Profile
