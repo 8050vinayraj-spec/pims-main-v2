@@ -25,7 +25,7 @@
             </p>
         </div>
         <div class="col-md-4">
-            {% if user.role == 'RECRUITER' and user.recruiter_profile.company.id == company.id %}
+            {% if user.role == 'RECRUITER' and user.company.id == company.id %}
               <a href="{% url 'companies:edit_company' company.id %}" class="btn btn-primary btn-sm">Edit Company</a>
             {% endif %}
             <a href="{% url 'companies:company_list' %}" class="btn btn-secondary btn-sm">Back to List</a>
@@ -84,13 +84,13 @@
                         <div class="list-group list-group-sm">
                             {% for recruiter in recruiters %}
                                 <div class="list-group-item">
-                                    <h6 class="mb-1">{{ recruiter.user.get_full_name|default:recruiter.user.username }}</h6>
-                                    <p class="text-muted small mb-1">{{ recruiter.designation }}</p>
-                                    {% if recruiter.phone %}
-                                        <p class="text-muted small">📞 {{ recruiter.phone }}</p>
+                                    <h6 class="mb-1">{{ recruiter.get_full_name|default:recruiter.username }}</h6>
+                                    <p class="text-muted small mb-1">{{ recruiter.role }}</p>
+                                    {% if recruiter.email %}
+                                        <p class="text-muted small">📧 {{ recruiter.email }}</p>
                                     {% endif %}
-                                    {% if recruiter.verified %}
-                                        <span class="badge bg-success small">Verified</span>
+                                    {% if recruiter.company == company %}
+                                        <span class="badge bg-success small">Linked</span>
                                     {% endif %}
                                 </div>
                             {% endfor %}

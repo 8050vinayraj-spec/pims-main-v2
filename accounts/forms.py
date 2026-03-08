@@ -33,9 +33,6 @@ class SignupForm(UserCreationForm):
             'class': 'form-select'
         })
     )
-    captcha = CaptchaField(
-        label='Enter the text from the image'
-    )
 
     class Meta:
         model = CustomUser
@@ -67,9 +64,6 @@ class LoginForm(forms.Form):
             'class': 'form-control',
             'placeholder': 'Password'
         })
-    )
-    captcha = CaptchaField(
-        label='Enter the text from the image'
     )
 
 

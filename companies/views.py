@@ -4,9 +4,10 @@ from django.contrib import messages
 from django.utils.timezone import now
 from django.views.generic import ListView, DetailView
 from django.views.decorators.http import require_POST
-from .models import Company, RecruiterProfile, CompanyHistory
+from .models import Company, CompanyHistory
 from .forms import CompanyForm
 from accounts.models import CustomUser
+
 
 class CompanyListView(ListView):
     model = Company
@@ -42,7 +43,8 @@ class CompanyDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['recruiters'] = self.object.recruiters.all()
+        # show recruiters linked via CustomUser
+        context['recruiters'] = CustomUser.objects.filter(company=self.object, role='RECRUITER')
         return context
 
 
@@ -57,11 +59,11 @@ def create_company_view(request):
         if form.is_valid():
             company = form.save()
             CompanyHistory.objects.create(company=company)
-            RecruiterProfile.objects.create(
-                user=request.user,
-                company=company,
-                designation=request.POST.get('designation', 'Recruiter')
-            )
+
+            # ✅ Link recruiter directly to the company
+            request.user.company = company
+            request.user.save()
+
             messages.success(request, f'{company.name} created successfully! Pending officer verification.')
             return redirect('companies:company_detail', pk=company.id)
     else:
@@ -74,7 +76,8 @@ def create_company_view(request):
 def edit_company_view(request, company_id):
     company = get_object_or_404(Company, id=company_id)
 
-    if request.user.role != 'RECRUITER' or not RecruiterProfile.objects.filter(user=request.user, company=company).exists():
+    # ✅ Check recruiter is linked to this company
+    if request.user.role != 'RECRUITER' or request.user.company != company:
         messages.error(request, 'You do not have permission to edit this company.')
         return redirect('companies:company_list')
 
@@ -140,15 +143,10 @@ def recruiter_dashboard_view(request):
         messages.error(request, 'You do not have access to this page.')
         return redirect('home')
 
-    recruiter_profiles = RecruiterProfile.objects.filter(user=request.user).select_related('company')
-    companies = [rp.company for rp in recruiter_profiles]
-
-    total_opportunities = sum(
-        company.opportunities.count() for company in companies if hasattr(company, 'opportunities')
-    )
+    company = request.user.company
+    opportunities_count = company.opportunities.count() if company and hasattr(company, 'opportunities') else 0
 
     return render(request, 'companies/recruiter_dashboard.html', {
-        'recruiter_profiles': recruiter_profiles,
-        'companies': companies,
-        'opportunities_count': total_opportunities,
+        'company': company,
+        'opportunities_count': opportunities_count,
     })
