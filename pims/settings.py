@@ -12,7 +12,11 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 from pathlib import Path
 import os
-import dj_database_url
+
+try:
+    import dj_database_url
+except ImportError:
+    dj_database_url = None
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -43,6 +47,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'captcha',
     'accounts',
     'students',
     'companies',
@@ -96,12 +101,20 @@ WSGI_APPLICATION = 'pims.wsgi.application'
 #     }
 # }
 
-DATABASES = {
-    "default": dj_database_url.config(
-        default="sqlite:///db.sqlite3",
-        conn_max_age=600,
-    )
-}
+if dj_database_url:
+    DATABASES = {
+        "default": dj_database_url.config(
+            default="sqlite:///db.sqlite3",
+            conn_max_age=600,
+        )
+    }
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 
 
@@ -157,3 +170,11 @@ LOGIN_REDIRECT_URL = 'home'
 CSRF_TRUSTED_ORIGINS = [
     "https://*.up.railway.app",
 ]
+
+# Google reCAPTCHA Settings
+# Get your keys from: https://www.google.com/recaptcha/admin
+RECAPTCHA_PUBLIC_KEY = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'  # Test key - replace with your own
+RECAPTCHA_PRIVATE_KEY = '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe'  # Test key - replace with your own
+
+# Use reCAPTCHA v3 for better UX (invisible)
+RECAPTCHA_REQUIRED_SCORE = 0.85  # Higher scores indicate more likely human

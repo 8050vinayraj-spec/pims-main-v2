@@ -4,11 +4,9 @@ from django.contrib import messages
 from django.utils.timezone import now
 from django.views.generic import ListView, DetailView
 from django.views.decorators.http import require_POST
-from django.urls import reverse
 from .models import Company, RecruiterProfile, CompanyHistory
-from .forms import CompanyForm, RecruiterProfileForm
+from .forms import CompanyForm
 from accounts.models import CustomUser
-
 
 class CompanyListView(ListView):
     model = Company
@@ -121,25 +119,6 @@ def verify_company_view(request, company_id):
     company.save()
     messages.success(request, f'{company.name} has been verified.')
     return redirect('companies:officer_verify_company')
-
-@require_POST
-@login_required
-def verify_company_view(request, company_id):
-    company = get_object_or_404(Company, id=company_id)
-    company.verified = True
-    company.verified_by = request.user
-    company.verified_at = now()
-    company.save()
-    messages.success(request, f'{company.name} has been verified.')
-    return redirect('dashboard:officer_verify_company')  # Adjust this if needed
-
-@require_POST
-@login_required
-def reject_company_view(request, company_id):
-    company = get_object_or_404(Company, id=company_id)
-    company.delete()
-    messages.info(request, f'{company.name} has been rejected and removed.')
-    return redirect('dashboard:officer_verify_company')  # Adjust this if needed
 
 
 @require_POST

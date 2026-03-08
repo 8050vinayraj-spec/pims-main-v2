@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Login - Placemnt and Internship Management System{% endblock %}
 
@@ -28,6 +29,17 @@
                                 <div class="text-danger small mt-1">{{ form.password.errors }}</div>
                             {% endif %}
                         </div>
+
+                        <!-- reCAPTCHA Field (only if available) -->
+                        {% if form.captcha %}
+                        <div class="mb-4">
+                            <label for="{{ form.captcha.id_for_label }}" class="form-label">{{ form.captcha.label }}</label>
+                            {{ form.captcha }}
+                            {% if form.captcha.errors %}
+                                <div class="text-danger small mt-2">{{ form.captcha.errors }}</div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
                         
                         <button type="submit" class="btn btn-primary w-100 mb-3">Login</button>
                     </form>

@@ -3,33 +3,70 @@
 {% block page_title %}Verify Companies{% endblock %}
 
 {% block content %}
-<h2>Pending Company Verifications</h2>
+<div class="container-fluid py-4">
+    <h2 class="mb-4">Pending Company Verifications</h2>
 
-{% if companies %}
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Company Name</th>
-                <th>Website</th>
-                <th>Recruiter</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for company in companies %}
-                <tr>
-                    <td>{{ company.name }}</td>
-                    <td><a href="{{ company.website }}" target="_blank">{{ company.website }}</a></td>
-                    <td>{{ company.recruiter.user.get_full_name }}</td>
-                    <td>
-                        <button class="btn btn-success btn-sm">Verify</button>
-                        <button class="btn btn-danger btn-sm">Reject</button>
-                    </td>
-                </tr>
+    {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
             {% endfor %}
-        </tbody>
-    </table>
-{% else %}
-    <p>No companies pending verification.</p>
-{% endif %}
+        </div>
+    {% endif %}
+
+    {% if companies %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Company Name</th>
+                        <th>Website</th>
+                        <th>Recruiter</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for company in companies %}
+                        <tr>
+                            <td>{{ company.name }}</td>
+                            <td>
+                                {% if company.website %}
+                                    <a href="{{ company.website }}" target="_blank">{{ company.website }}</a>
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if company.recruiters.first.user.get_full_name %}
+                                    {{ company.recruiters.first.user.get_full_name }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <form method="post" action="{% url 'dashboard:verify_company' company.id %}" style="display:inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-success btn-sm">Verify</button>
+                                    </form>
+                                    <form method="post" action="{% url 'dashboard:reject_company' company.id %}" style="display:inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to reject this company?');">Reject</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info" role="alert">
+            <strong>✓ All companies are verified!</strong> No pending verifications at the moment.
+        </div>
+    {% endif %}
+</div>
 {% endblock %}

@@ -80,7 +80,7 @@
                     {% for company in verified_companies %}
                         <tr>
                             <td>
-                                <a href="{% url 'company_detail' company.id %}" class="text-decoration-none">
+                                <a href="{% url 'companies:company_detail' company.id %}" class="text-decoration-none">
                                     {{ company.name }}
                                 </a>
                             </td>

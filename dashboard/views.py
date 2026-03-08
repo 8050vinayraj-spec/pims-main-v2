@@ -1,9 +1,10 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden, JsonResponse, HttpResponse
 from django.db.models import Count, Avg, Q
 from django.utils import timezone
 from django.contrib import messages
+from django.views.decorators.http import require_POST
 from companies.models import Company
 
 import csv
@@ -135,6 +136,36 @@ def verify_company_view(request):
         'page_title': 'Verify Companies',
     }
     return render(request, 'dashboard/verify_company.html', context)
+
+
+@require_POST
+@login_required
+def verify_company_action_view(request, company_id):
+    if not (hasattr(request.user, 'role') and request.user.role == 'OFFICER'):
+        messages.error(request, 'Unauthorized access.')
+        return redirect('dashboard:officer_verify_company')
+
+    company = get_object_or_404(Company, id=company_id)
+    company.verified = True
+    company.verified_by = request.user
+    company.verified_at = timezone.now()
+    company.save()
+    messages.success(request, f'{company.name} has been verified successfully.')
+    return redirect('dashboard:officer_verify_company')
+
+
+@require_POST
+@login_required
+def reject_company_action_view(request, company_id):
+    if not (hasattr(request.user, 'role') and request.user.role == 'OFFICER'):
+        messages.error(request, 'Unauthorized access.')
+        return redirect('dashboard:officer_verify_company')
+
+    company = get_object_or_404(Company, id=company_id)
+    company_name = company.name
+    company.delete()
+    messages.info(request, f'{company_name} has been rejected and removed.')
+    return redirect('dashboard:officer_verify_company')
 
 @login_required
 def recruiter_dashboard_view(request):
