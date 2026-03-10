@@ -171,29 +171,39 @@ def reject_company_action_view(request, company_id):
 def recruiter_dashboard_view(request):
     user = request.user
 
+    # Restrict access to recruiters only
     if user.role.upper() != 'RECRUITER':
         messages.error(request, "Only recruiters can access this page.")
         return HttpResponseForbidden("Only recruiters can access this.")
 
+    # Check if recruiter account is approved
     if not user.is_approved:
         messages.warning(request, "Your recruiter account is not yet approved.")
         return render(request, 'accounts/approval_pending.html')
 
+    # Ensure recruiter has a company linked
     company = getattr(user, 'company', None)
     if not company:
         messages.error(request, "No company is associated with your account.")
-        return render(request, 'dashboard/no_company_assigned.html')  # Optional: use a template instead of raw 403
+        return render(request, 'dashboard/no_company_assigned.html')
 
+    # Dashboard stats
     total_opportunities = Opportunity.objects.filter(company=company).count()
     published_opportunities = Opportunity.objects.filter(company=company, status='PUBLISHED').count()
     total_applications = Application.objects.filter(opportunity__company=company).count()
     shortlisted = Application.objects.filter(opportunity__company=company, status='SHORTLISTED').count()
     selected = HiringDecision.objects.filter(application__opportunity__company=company, result='SELECTED').count()
-    accepted_offers = OfferResponse.objects.filter(decision__application__opportunity__company=company, response='ACCEPTED').count()
+    accepted_offers = OfferResponse.objects.filter(
+        decision__application__opportunity__company=company,
+        response='ACCEPTED'
+    ).count()
 
-    recent_applications = Application.objects.filter(opportunity__company=company).select_related(
-        'student', 'opportunity').order_by('-applied_at')[:10]
+    # Recent applications
+    recent_applications = Application.objects.filter(opportunity__company=company) \
+        .select_related('student', 'opportunity') \
+        .order_by('-applied_at')[:10]
 
+    # Context for template
     context = {
         'company': company,
         'total_opportunities': total_opportunities,
@@ -205,24 +215,32 @@ def recruiter_dashboard_view(request):
         'recent_applications': recent_applications,
     }
 
+    # ✅ Always return a response here
     return render(request, 'dashboard/recruiter_dashboard.html', context)
+
 @login_required
 def student_dashboard_view(request):
+    # Ensure only students can access
     try:
         student = StudentProfile.objects.get(user=request.user)
     except StudentProfile.DoesNotExist:
         return HttpResponseForbidden("Only students can access this.")
 
+    # Applications with related data
     applications_qs = Application.objects.filter(student=student).select_related(
         'opportunity', 'opportunity__company'
     ).prefetch_related('hiring_decision__offer_response', 'screening_result', 'slot_assignment')
 
     applications = list(applications_qs)
 
+    # Stats
     total_applications = len(applications)
     shortlisted = sum(1 for app in applications if app.status == 'SHORTLISTED')
     rejected = sum(1 for app in applications if app.status == 'REJECTED')
-    offers_made = sum(1 for app in applications if getattr(app, 'hiring_decision', None) and app.hiring_decision.result == 'SELECTED')
+    offers_made = sum(
+        1 for app in applications
+        if getattr(app, 'hiring_decision', None) and app.hiring_decision.result == 'SELECTED'
+    )
 
     accepted_offers = 0
     for app in applications:
@@ -232,12 +250,15 @@ def student_dashboard_view(request):
             if offer_response and offer_response.response == 'ACCEPTED':
                 accepted_offers += 1
 
+    # Screening results
     screening_results = ScreeningResult.objects.filter(application__student=student).select_related('application__opportunity')
     eligible = screening_results.filter(result='ELIGIBLE').count()
     not_eligible = screening_results.filter(result='NOT_ELIGIBLE').count()
 
+    # Placements
     placements = PlacementRecord.objects.filter(student=student)
 
+    # Pending offers
     pending_offers = []
     for app in applications:
         decision = getattr(app, 'hiring_decision', None)
@@ -260,6 +281,7 @@ def student_dashboard_view(request):
         'pending_offers': pending_offers,
         'profile_completion': student.profile_completion_percentage(),
     }
+
     return render(request, 'dashboard/student_dashboard.html', context)
 
 

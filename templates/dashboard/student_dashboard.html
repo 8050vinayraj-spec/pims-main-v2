@@ -1,204 +1,145 @@
 {% extends 'base.html' %}
-
-{% block title %}My Dashboard{% endblock %}
+{% block title %}Student Dashboard{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <div class="row mb-4">
-        <div class="col">
-            <h2>My Applications & Placements</h2>
-            <p class="text-muted">{{ student.user.get_full_name }}</p>
-        </div>
+<div class="container mt-4">
+    <h2>Welcome, {{ student.user.get_full_name|default:student.user.username }}</h2>
+
+    <!-- Profile Completion -->
+    <div class="alert alert-info mt-3">
+        <strong>Profile Completion:</strong> {{ profile_completion }}%
     </div>
 
     <!-- Application Statistics -->
-    <div class="row mb-4">
-        <div class="col-lg-2-4 col-md-4">
-            <div class="card text-center">
-                <div class="card-body">
-                    <h5 class="card-title text-muted">Applications</h5>
-                    <h2 class="card-text" style="color: #2563EB;">{{ total_applications }}</h2>
-                </div>
-            </div>
+    <div class="row text-center mb-4">
+        <div class="col-md-3">
+            <h4>{{ total_applications }}</h4>
+            <p class="text-muted">Total Applications</p>
         </div>
-        <div class="col-lg-2-4 col-md-4">
-            <div class="card text-center">
-                <div class="card-body">
-                    <h5 class="card-title text-muted">Shortlisted</h5>
-                    <h2 class="card-text" style="color: #F59E0B;">{{ shortlisted }}</h2>
-                </div>
-            </div>
+        <div class="col-md-3">
+            <h4>{{ shortlisted }}</h4>
+            <p class="text-muted">Shortlisted</p>
         </div>
-        <div class="col-lg-2-4 col-md-4">
-            <div class="card text-center">
-                <div class="card-body">
-                    <h5 class="card-title text-muted">Offers Made</h5>
-                    <h2 class="card-text" style="color: #8B5CF6;">{{ offers_made }}</h2>
-                </div>
-            </div>
+        <div class="col-md-3">
+            <h4>{{ rejected }}</h4>
+            <p class="text-muted">Rejected</p>
         </div>
-        <div class="col-lg-2-4 col-md-4">
-            <div class="card text-center">
-                <div class="card-body">
-                    <h5 class="card-title text-muted">Offers Accepted</h5>
-                    <h2 class="card-text" style="color: #16A34A;">{{ accepted_offers }}</h2>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-2-4 col-md-4">
-            <div class="card text-center">
-                <div class="card-body">
-                    <h5 class="card-title text-muted">Rejections</h5>
-                    <h2 class="card-text" style="color: #DC2626;">{{ rejected }}</h2>
-                </div>
-            </div>
+        <div class="col-md-3">
+            <h4>{{ offers_made }}</h4>
+            <p class="text-muted">Offers Made</p>
         </div>
     </div>
 
-    <!-- Pending Offers Alert -->
-    {% if pending_offers %}
-    <div class="row mb-4">
-        <div class="col">
-            <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                <i class="fas fa-exclamation-triangle"></i>
-                <strong>Action Required!</strong> You have {{ pending_offers.count }} pending offer(s) waiting for your response.
-                <hr>
-                {% for app in pending_offers %}
-                    <div class="mb-2">
-                        <strong>{{ app.opportunity.title }}</strong> from <strong>{{ app.opportunity.company.name }}</strong>
-                        <a href="{% url 'decisions:offer-response' app.hiring_decision.id %}" class="btn btn-sm btn-primary ms-2">
-                            <i class="fas fa-reply"></i> Respond Now
-                        </a>
-                    </div>
-                {% endfor %}
-            </div>
+    <!-- Accepted Offers -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>Accepted Offers</h5>
+        </div>
+        <div class="card-body">
+            <p>You have accepted <strong>{{ accepted_offers }}</strong> offers.</p>
         </div>
     </div>
-    {% endif %}
 
-    <!-- All Applications with Complete Status -->
-    <div class="row">
-        <div class="col">
-            <div class="card">
-                <div class="card-header">
-                    <h6 class="mb-0"><i class="fas fa-list"></i> All Applications & Status</h6>
-                </div>
-                {% if applications %}
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Opportunity</th>
-                                <th>Company</th>
-                                <th>Application</th>
-                                <th>Screening</th>
-                                <th>Interview</th>
-                                <th>Decision</th>
-                                <th>Offer Response</th>
-                                <th>Applied</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for app in applications %}
-                            <tr>
-                                <td><strong>{{ app.opportunity.title }}</strong></td>
-                                <td>{{ app.opportunity.company.name }}</td>
-                                <td>
-                                    {% if app.status == 'APPLIED' %}
-                                        <span class="badge bg-info">Applied</span>
-                                    {% elif app.status == 'SHORTLISTED' %}
-                                        <span class="badge bg-success">Shortlisted</span>
-                                    {% elif app.status == 'REJECTED' %}
-                                        <span class="badge bg-danger">Rejected</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if app.screening_result %}
-                                        {% if app.screening_result.result == 'ELIGIBLE' %}
-                                            <span class="badge bg-success">✓ Eligible</span>
-                                        {% else %}
-                                            <span class="badge bg-danger">✗ Not Eligible</span>
-                                        {% endif %}
-                                    {% else %}
-                                        <span class="badge bg-secondary">Pending</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if app.slot_assignment %}
-                                        <span class="badge bg-info">Scheduled</span>
-                                    {% elif app.hiring_decision %}
-                                        <span class="badge bg-secondary">Completed</span>
-                                    {% else %}
-                                        <span class="badge bg-secondary">-</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if app.hiring_decision %}
-                                        {% if app.hiring_decision.result == 'SELECTED' %}
-                                            <span class="badge bg-success">✓ Selected</span>
-                                        {% elif app.hiring_decision.result == 'REJECTED' %}
-                                            <span class="badge bg-danger">✗ Rejected</span>
-                                        {% elif app.hiring_decision.result == 'WAITLIST' %}
-                                            <span class="badge bg-warning">⏳ Waitlist</span>
-                                        {% endif %}
-                                    {% else %}
-                                        <span class="badge bg-secondary">Pending</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if app.hiring_decision %}
-                                        {% with offer=app.hiring_decision.offer_response|default:None %}
-                                            {% if offer %}
-                                                {% if offer.response == 'ACCEPTED' %}
-                                                    <span class="badge bg-success">✓ Accepted</span>
-                                                {% elif offer.response == 'REJECTED' %}
-                                                    <span class="badge bg-danger">✗ Rejected</span>
-                                                {% else %}
-                                                    <span class="badge bg-secondary">Pending</span>
-                                                {% endif %}
-                                            {% else %}
-                                                {% if app.hiring_decision.result == 'SELECTED' %}
-                                                    <span class="badge bg-warning">Awaiting your response</span>
-                                                {% else %}
-                                                    <span class="badge bg-secondary">-</span>
-                                                {% endif %}
-                                            {% endif %}
-                                        {% endwith %}
-                                    {% else %}
-                                        <span class="badge bg-secondary">-</span>
-                                    {% endif %}
-                                </td>
-                                <td><small>{{ app.applied_at|date:"d M, Y" }}</small></td>
-                                <td>
-                                    {% with offer=app.hiring_decision.offer_response|default:None %}
-                                        {% if app.hiring_decision and app.hiring_decision.result == 'SELECTED' and not offer %}
-                                            <a href="{% url 'decisions:offer-response' app.hiring_decision.id %}" class="btn btn-sm btn-primary">
-                                                <i class="fas fa-reply"></i> Respond
-                                            </a>
-                                        {% elif app.hiring_decision %}
-                                            <a href="{% url 'decisions:decision-detail' app.hiring_decision.id %}" class="btn btn-sm btn-info">
-                                                <i class="fas fa-eye"></i> View
-                                            </a>
-                                        {% else %}
-                                            <span class="text-muted">-</span>
-                                        {% endif %}
-                                    {% endwith %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% else %}
-                <div class="card-body">
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i>
-                        You haven't applied to any opportunities yet. 
-                    <a href="{% url 'opportunities:opportunity_list' %}" class="alert-link">Browse opportunities</a>                    </div>
-                </div>
-                {% endif %}
-            </div>
+    <!-- Pending Offers -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>Pending Offers</h5>
+        </div>
+        <div class="card-body">
+            {% if pending_offers %}
+                <ul class="list-group">
+                    {% for app in pending_offers %}
+                        <li class="list-group-item">
+                            <strong>{{ app.opportunity.title }}</strong> at {{ app.opportunity.company.name }}
+                            <span class="badge bg-warning">Pending Response</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted">No pending offers.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Screening Results -->
+    <div class="row text-center mb-4">
+        <div class="col-md-6">
+            <h4>{{ eligible }}</h4>
+            <p class="text-muted">Eligible</p>
+        </div>
+        <div class="col-md-6">
+            <h4>{{ not_eligible }}</h4>
+            <p class="text-muted">Not Eligible</p>
+        </div>
+    </div>
+
+    <!-- Placements -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>Placements</h5>
+        </div>
+        <div class="card-body">
+            {% if placements %}
+                <ul class="list-group">
+                    {% for placement in placements %}
+                        <li class="list-group-item">
+                            {{ placement.company.name }} - {{ placement.opportunity.title }}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted">No placements recorded yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Applications -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>My Applications</h5>
+        </div>
+        <div class="card-body">
+            {% if applications %}
+                <ul class="list-group">
+                    {% for app in applications %}
+                        <li class="list-group-item">
+                            <strong>{{ app.opportunity.title }}</strong> at {{ app.opportunity.company.name }}
+                            <span class="badge 
+                                {% if app.status == 'SHORTLISTED' %}bg-success
+                                {% elif app.status == 'REJECTED' %}bg-danger
+                                {% else %}bg-secondary{% endif %}">
+                                {{ app.status }}
+                            </span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted">You have not applied to any opportunities yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Available Opportunities -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>Available Opportunities</h5>
+        </div>
+        <div class="card-body">
+            {% if opportunities %}
+                <ul class="list-group">
+                    {% for opp in opportunities %}
+                        <li class="list-group-item">
+                            <h6>{{ opp.title }}</h6>
+                            <p>{{ opp.description|truncatewords:20 }}</p>
+                            <p><strong>Company:</strong> {{ opp.company.name }}</p>
+                            <p><strong>Deadline:</strong> {{ opp.deadline }}</p>
+                            <a href="{% url 'applications:apply' opportunity_id=opp.id %}" class="btn btn-primary btn-sm">Apply</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted">No opportunities available at the moment.</p>
+            {% endif %}
         </div>
     </div>
 </div>

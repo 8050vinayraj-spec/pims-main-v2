@@ -1,7 +1,6 @@
 {% extends 'base.html' %}
 
 {% block title %}Apply - PIMS{% endblock %}
-
 {% block page_title %}Apply{% endblock %}
 
 {% block content %}
@@ -20,7 +19,8 @@
                     <form method="POST">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-primary w-100 mb-2">Apply Now</button>
-                        <a href="{% url 'opportunity_detail' opportunity.id %}" class="btn btn-secondary w-100">Cancel</a>
+                        <!-- ✅ Fixed namespace -->
+                        <a href="{% url 'opportunities:opportunity_detail' opportunity_id=opportunity.id %}" class="btn btn-secondary w-100">Cancel</a>
                     </form>
                 </div>
             </div>

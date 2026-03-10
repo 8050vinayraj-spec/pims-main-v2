@@ -12,8 +12,8 @@
             <p class="text-muted">{{ opportunity.company.name }}</p>
         </div>
         <div class="col-md-4 text-end">
-            <a href="{% url 'screening:screening_rule' opportunity.id %}" class="btn btn-secondary">Back to Rules</a>
-            <a href="{% url 'applications:applicant_list' opportunity.id %}" class="btn btn-info">View Applicants</a>
+            <a href="{% url 'screening:screening_rule' opportunity_id=opportunity.id %}" class="btn btn-secondary">Back to Rules</a>
+            <a href="{% url 'applications:applicant_list' opportunity_id=opportunity.id %}" class="btn btn-info">View Applicants</a>
         </div>
     </div>
 

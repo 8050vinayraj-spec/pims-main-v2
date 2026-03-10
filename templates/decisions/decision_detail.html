@@ -60,7 +60,7 @@
                     {% elif is_student %}
                     <hr>
                     <div class="mt-4">
-                        <a href="{% url 'decisions:offer-response' decision.id %}" class="btn btn-primary">
+                        <a href="{% url 'decisions:offer-response' decision_id=decision.id %}" class="btn btn-primary">
                             <i class="fas fa-reply"></i> Respond to Offer
                         </a>
                     </div>
@@ -70,12 +70,12 @@
 
             <div class="mt-4">
                 {% if is_recruiter %}
-                <a href="{% url 'decisions:add-hiring-decision' application.id %}" class="btn btn-primary">
+                <a href="{% url 'decisions:add-hiring-decision' application_id=application.id %}" class="btn btn-primary">
                     <i class="fas fa-edit"></i> Edit Decision
                 </a>
                 {% endif %}
                 {% if is_recruiter %}
-                <a href="{% url 'decisions:decision-list' opportunity.id %}" class="btn btn-secondary">
+                <a href="{% url 'decisions:decision-list' opportunity_id=opportunity.id %}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i> Back
                 </a>
                 {% else %}

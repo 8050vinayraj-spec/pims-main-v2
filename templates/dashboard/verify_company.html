@@ -48,11 +48,11 @@
                             </td>
                             <td>
                                 <div class="btn-group" role="group">
-                                    <form method="post" action="{% url 'dashboard:verify_company' company.id %}" style="display:inline;">
+                                    <form method="post" action="{% url 'dashboard:verify_company' company_id=company.id %}" style="display:inline;">
                                         {% csrf_token %}
                                         <button type="submit" class="btn btn-success btn-sm">Verify</button>
                                     </form>
-                                    <form method="post" action="{% url 'dashboard:reject_company' company.id %}" style="display:inline;">
+                                    <form method="post" action="{% url 'dashboard:reject_company' company_id=company.id %}" style="display:inline;">
                                         {% csrf_token %}
                                         <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to reject this company?');">Reject</button>
                                     </form>

@@ -6,7 +6,7 @@ from django.utils import timezone
 from decimal import Decimal, InvalidOperation
 import re
 
-from companies.models import RecruiterProfile, Company
+from companies.models import Company
 from students.models import StudentProfile
 from applications.models import Application, ApplicationLog
 from records.models import PlacementRecord
@@ -31,11 +31,7 @@ def decision_list_view(request, opportunity_id):
     from opportunities.models import Opportunity
     opportunity = get_object_or_404(Opportunity, id=opportunity_id)
 
-    try:
-        recruiter = RecruiterProfile.objects.get(user=request.user)
-        if opportunity.company != recruiter.company:
-            return HttpResponseForbidden("You don't have permission.")
-    except RecruiterProfile.DoesNotExist:
+    if request.user.role != 'RECRUITER' or request.user.company != opportunity.company:
         return HttpResponseForbidden("Only recruiters can view decisions.")
 
     applications = Application.objects.filter(
@@ -53,11 +49,7 @@ def decision_list_view(request, opportunity_id):
 def add_hiring_decision_view(request, application_id):
     application = get_object_or_404(Application, id=application_id)
 
-    try:
-        recruiter = RecruiterProfile.objects.get(user=request.user)
-        if application.opportunity.company != recruiter.company:
-            return HttpResponseForbidden("You don't have permission.")
-    except RecruiterProfile.DoesNotExist:
+    if request.user.role != 'RECRUITER' or request.user.company != application.opportunity.company:
         return HttpResponseForbidden("Only recruiters can make decisions.")
 
     decision, created = HiringDecision.objects.get_or_create(application=application)
@@ -96,10 +88,7 @@ def offer_response_view(request, decision_id):
     is_student = StudentProfile.objects.filter(
         user=request.user
     ).filter(user=application.student.user).exists()
-    is_recruiter = RecruiterProfile.objects.filter(
-        user=request.user,
-        company=application.opportunity.company
-    ).exists()
+    is_recruiter = request.user.role == 'RECRUITER' and request.user.company == application.opportunity.company
 
     if not (is_student or is_recruiter):
         return HttpResponseForbidden("You don't have permission.")
@@ -154,10 +143,7 @@ def decision_detail_view(request, decision_id):
     is_student = StudentProfile.objects.filter(
         user=request.user
     ).filter(user=application.student.user).exists()
-    is_recruiter = RecruiterProfile.objects.filter(
-        user=request.user,
-        company=application.opportunity.company
-    ).exists()
+    is_recruiter = request.user.role == 'RECRUITER' and request.user.company == application.opportunity.company
 
     if not (is_student or is_recruiter):
         return HttpResponseForbidden("You don't have permission.")

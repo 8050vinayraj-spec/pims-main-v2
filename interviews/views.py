@@ -3,7 +3,6 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpResponseForbidden
 from django.db.models import Q
-from companies.models import RecruiterProfile
 from students.models import StudentProfile
 from opportunities.models import Opportunity
 from applications.models import Application
@@ -16,38 +15,12 @@ from .forms import (
 
 @login_required
 def interview_rounds_view(request, opportunity_id):
-    """List interview rounds for an opportunity"""
-    opportunity = get_object_or_404(Opportunity, id=opportunity_id)
-    
-    # Check if user is recruiter for this company
-    try:
-        recruiter = RecruiterProfile.objects.get(user=request.user)
-        if opportunity.company != recruiter.company:
-            return HttpResponseForbidden("You don't have permission to view this.")
-    except RecruiterProfile.DoesNotExist:
-        return HttpResponseForbidden("Only recruiters can access this.")
-    
-    rounds = opportunity.interview_rounds.all()
-    
-    context = {
-        'opportunity': opportunity,
-        'rounds': rounds,
-    }
-    return render(request, 'interviews/interview_rounds.html', context)
-
-
-@login_required
-def create_interview_round_view(request, opportunity_id):
     """Create a new interview round"""
     opportunity = get_object_or_404(Opportunity, id=opportunity_id)
     
-    # Check if user is recruiter for this company
-    try:
-        recruiter = RecruiterProfile.objects.get(user=request.user)
-        if opportunity.company != recruiter.company:
-            return HttpResponseForbidden("You don't have permission.")
-    except RecruiterProfile.DoesNotExist:
-        return HttpResponseForbidden("Only recruiters can create rounds.")
+    # ✅ Check if user is a recruiter from this company
+    if request.user.role != 'RECRUITER' or request.user.company != opportunity.company:
+        return HttpResponseForbidden("Only recruiters from this company can create rounds.")
     
     if request.method == 'POST':
         form = InterviewRoundForm(request.POST)
@@ -67,7 +40,6 @@ def create_interview_round_view(request, opportunity_id):
     }
     return render(request, 'interviews/create_interview_round.html', context)
 
-
 @login_required
 def interview_slots_view(request, round_id):
     """List interview slots for a round"""
@@ -75,11 +47,7 @@ def interview_slots_view(request, round_id):
     opportunity = round.opportunity
     
     # Check if user is recruiter for this company
-    try:
-        recruiter = RecruiterProfile.objects.get(user=request.user)
-        if opportunity.company != recruiter.company:
-            return HttpResponseForbidden("You don't have permission.")
-    except RecruiterProfile.DoesNotExist:
+    if request.user.role != 'RECRUITER' or request.user.company != opportunity.company:
         return HttpResponseForbidden("Only recruiters can view slots.")
     
     slots = round.slots.all()
@@ -99,11 +67,7 @@ def create_interview_slot_view(request, round_id):
     opportunity = round.opportunity
     
     # Check if user is recruiter
-    try:
-        recruiter = RecruiterProfile.objects.get(user=request.user)
-        if opportunity.company != recruiter.company:
-            return HttpResponseForbidden("You don't have permission.")
-    except RecruiterProfile.DoesNotExist:
+    if request.user.role != 'RECRUITER' or request.user.company != opportunity.company:
         return HttpResponseForbidden("Only recruiters can create slots.")
     
     if request.method == 'POST':
@@ -133,11 +97,7 @@ def assign_students_view(request, round_id):
     opportunity = round.opportunity
     
     # Check if user is recruiter
-    try:
-        recruiter = RecruiterProfile.objects.get(user=request.user)
-        if opportunity.company != recruiter.company:
-            return HttpResponseForbidden("You don't have permission.")
-    except RecruiterProfile.DoesNotExist:
+    if request.user.role != 'RECRUITER' or request.user.company != opportunity.company:
         return HttpResponseForbidden("Only recruiters can assign.")
     
     # Get unassigned applications that passed previous rounds (if any)
@@ -207,11 +167,7 @@ def add_feedback_view(request, application_id, round_id):
     opportunity = round.opportunity
     
     # Check if user is recruiter
-    try:
-        recruiter = RecruiterProfile.objects.get(user=request.user)
-        if opportunity.company != recruiter.company:
-            return HttpResponseForbidden("You don't have permission.")
-    except RecruiterProfile.DoesNotExist:
+    if request.user.role != 'RECRUITER' or request.user.company != opportunity.company:
         return HttpResponseForbidden("Only recruiters can add feedback.")
     
     # Get or create feedback
@@ -245,10 +201,7 @@ def interview_feedback_view(request, application_id):
     application = get_object_or_404(Application, id=application_id)
     
     # Check if user is recruiter or the student
-    is_recruiter = RecruiterProfile.objects.filter(
-        user=request.user,
-        company=application.opportunity.company
-    ).exists()
+    is_recruiter = request.user.role == 'RECRUITER' and request.user.company == application.opportunity.company
     is_student = StudentProfile.objects.filter(
         user=request.user
     ).filter(user=application.student.user).exists()

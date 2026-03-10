@@ -5,16 +5,8 @@ from django.utils.timezone import now
 from django import forms
 from .models import Opportunity, RequiredSkill
 from .forms import OpportunityForm, RequiredSkillForm, OpportunityFilterForm
-from companies.models import RecruiterProfile, Company
+from companies.models import Company
 
-# Step 1: Add a form to choose company
-class CompanyChoiceForm(forms.Form):
-    company = forms.ModelChoiceField(
-        queryset=Company.objects.none(),
-        label="Select Company",
-        empty_label="Choose a company",
-        widget=forms.Select(attrs={'class': 'form-select'})
-    )
 
 @login_required
 def opportunity_list_view(request):
@@ -69,7 +61,7 @@ def opportunity_detail_view(request, opportunity_id):
     student_application = None
 
     if request.user.role == 'RECRUITER':
-        can_manage = RecruiterProfile.objects.filter(user=request.user, company=opportunity.company).exists()
+        can_manage = (request.user.company == opportunity.company)
     if request.user.role == 'STUDENT':
         from applications.models import Application
         student_application = Application.objects.filter(
@@ -89,41 +81,34 @@ def opportunity_detail_view(request, opportunity_id):
     return render(request, 'opportunities/opportunity_detail.html', context)
 
 
-# Step 2: Updated view to support company selection
 @login_required
 def create_opportunity_view(request):
     if request.user.role != 'RECRUITER':
         messages.error(request, 'Only recruiters can create opportunities.')
         return redirect('opportunities:opportunity_list')
 
-    recruiter_profiles = RecruiterProfile.objects.filter(user=request.user, verified=True)
-    verified_companies = [rp.company for rp in recruiter_profiles]
-
-    if not verified_companies:
-        messages.error(request, 'You need a verified company profile to create opportunities.')
+    if not request.user.company:
+        messages.error(request, 'You need a company profile to create opportunities.')
         return redirect('companies:create_company')
 
-    if request.method == 'POST':
-        company_form = CompanyChoiceForm(request.POST)
-        company_form.fields['company'].queryset = Company.objects.filter(id__in=[c.id for c in verified_companies])
-        form = OpportunityForm(request.POST)
+    if not request.user.company.verified:
+        messages.error(request, 'Your company must be verified by an officer before posting opportunities.')
+        return redirect('dashboard:recruiter_dashboard')
 
-        if company_form.is_valid() and form.is_valid():
-            company = company_form.cleaned_data['company']
+    if request.method == 'POST':
+        form = OpportunityForm(request.POST)
+        if form.is_valid():
             opportunity = form.save(commit=False)
-            opportunity.company = company
+            opportunity.company = request.user.company
             opportunity.status = 'DRAFT'
             opportunity.save()
             messages.success(request, 'Opportunity created in draft mode.')
             return redirect('opportunities:opportunity_detail', opportunity_id=opportunity.id)
     else:
-        company_form = CompanyChoiceForm()
-        company_form.fields['company'].queryset = Company.objects.filter(id__in=[c.id for c in verified_companies])
         form = OpportunityForm()
 
     return render(request, 'opportunities/create_opportunity.html', {
         'form': form,
-        'company_form': company_form,
         'opportunity': None
     })
 
@@ -132,7 +117,7 @@ def create_opportunity_view(request):
 def edit_opportunity_view(request, opportunity_id):
     opportunity = get_object_or_404(Opportunity, id=opportunity_id)
 
-    if request.user.role != 'RECRUITER' or not RecruiterProfile.objects.filter(user=request.user, company=opportunity.company).exists():
+    if request.user.role != 'RECRUITER' or request.user.company != opportunity.company:
         messages.error(request, 'You do not have permission to edit this opportunity.')
         return redirect('opportunities:opportunity_list')
 
@@ -152,7 +137,7 @@ def edit_opportunity_view(request, opportunity_id):
 def publish_opportunity_view(request, opportunity_id):
     opportunity = get_object_or_404(Opportunity, id=opportunity_id)
 
-    if request.user.role != 'RECRUITER' or not RecruiterProfile.objects.filter(user=request.user, company=opportunity.company).exists():
+    if request.user.role != 'RECRUITER' or request.user.company != opportunity.company:
         messages.error(request, 'You do not have permission to publish this opportunity.')
         return redirect('opportunities:opportunity_list')
 
@@ -172,7 +157,7 @@ def publish_opportunity_view(request, opportunity_id):
 def close_opportunity_view(request, opportunity_id):
     opportunity = get_object_or_404(Opportunity, id=opportunity_id)
 
-    if request.user.role != 'RECRUITER' or not RecruiterProfile.objects.filter(user=request.user, company=opportunity.company).exists():
+    if request.user.role != 'RECRUITER' or request.user.company != opportunity.company:
         messages.error(request, 'You do not have permission to close this opportunity.')
         return redirect('opportunities:opportunity_list')
 
@@ -190,7 +175,7 @@ def close_opportunity_view(request, opportunity_id):
 def add_required_skill_view(request, opportunity_id):
     opportunity = get_object_or_404(Opportunity, id=opportunity_id)
 
-    if request.user.role != 'RECRUITER' or not RecruiterProfile.objects.filter(user=request.user, company=opportunity.company).exists():
+    if request.user.role != 'RECRUITER' or request.user.company != opportunity.company:
         messages.error(request, 'You do not have permission to edit this opportunity.')
         return redirect('opportunities:opportunity_list')
 
@@ -213,7 +198,7 @@ def delete_required_skill_view(request, skill_id):
     skill = get_object_or_404(RequiredSkill, id=skill_id)
     opportunity = skill.opportunity
 
-    if request.user.role != 'RECRUITER' or not RecruiterProfile.objects.filter(user=request.user, company=opportunity.company).exists():
+    if request.user.role != 'RECRUITER' or request.user.company != opportunity.company:
         messages.error(request, 'You do not have permission to modify this opportunity.')
         return redirect('opportunities:opportunity_list')
 

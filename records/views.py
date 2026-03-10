@@ -2,8 +2,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpResponseForbidden
-from django.db.models import Q, Avg, Count
-from companies.models import RecruiterProfile, Company
+from django.db.models import Q, Avg, Count, Max, Min
+from companies.models import Company
 from students.models import StudentProfile
 from .models import PlacementRecord
 from .forms import PlacementRecordForm, PlacementFilterForm
@@ -14,7 +14,7 @@ def placement_records_view(request):
     """List placement records based on user role"""
     # Check user role
     is_officer = hasattr(request.user, 'role') and request.user.role == 'OFFICER'
-    is_recruiter = RecruiterProfile.objects.filter(user=request.user).exists()
+    is_recruiter = request.user.role == 'RECRUITER'
     
     if not (is_officer or is_recruiter):
         return HttpResponseForbidden("You don't have permission to view records.")
@@ -23,8 +23,7 @@ def placement_records_view(request):
     
     # Filter by company if recruiter
     if is_recruiter:
-        recruiter = RecruiterProfile.objects.get(user=request.user)
-        records = records.filter(company=recruiter.company)
+        records = records.filter(company=request.user.company)
     
     # Apply search filters
     form = PlacementFilterForm(request.GET)
@@ -151,11 +150,7 @@ def company_placement_stats_view(request, company_id):
     company = get_object_or_404(Company, id=company_id)
     
     # Check if user is recruiter for this company
-    try:
-        recruiter = RecruiterProfile.objects.get(user=request.user)
-        if recruiter.company != company:
-            return HttpResponseForbidden("You don't have permission.")
-    except RecruiterProfile.DoesNotExist:
+    if request.user.role != 'RECRUITER' or request.user.company != company:
         return HttpResponseForbidden("Only recruiters can view stats.")
     
     records = PlacementRecord.objects.filter(company=company).select_related('student')

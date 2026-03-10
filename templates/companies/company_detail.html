@@ -26,7 +26,7 @@
         </div>
         <div class="col-md-4">
             {% if user.role == 'RECRUITER' and user.company.id == company.id %}
-              <a href="{% url 'companies:edit_company' company.id %}" class="btn btn-primary btn-sm">Edit Company</a>
+              <a href="{% url 'companies:edit_company' company_id=company.id %}" class="btn btn-primary btn-sm">Edit Company</a>
             {% endif %}
             <a href="{% url 'companies:company_list' %}" class="btn btn-secondary btn-sm">Back to List</a>
         </div>

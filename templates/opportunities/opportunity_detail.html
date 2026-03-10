@@ -1,7 +1,6 @@
 {% extends 'base.html' %}
 
 {% block title %}{{ opportunity.title }} - PIMS{% endblock %}
-
 {% block page_title %}Opportunity Details{% endblock %}
 
 {% block content %}
@@ -19,18 +18,19 @@
         <div class="col-md-4 text-end">
             {% if can_manage %}
                 {% if opportunity.status == 'DRAFT' %}
-                    <a href="{% url 'publish_opportunity' opportunity.id %}" class="btn btn-success">Publish</a>
-                    <a href="{% url 'edit_opportunity' opportunity.id %}" class="btn btn-warning">Edit</a>
+                    <a href="{% url 'opportunities:publish_opportunity' opportunity_id=opportunity.id %}" class="btn btn-success">Publish</a>
+                    <a href="{% url 'opportunities:edit_opportunity' opportunity_id=opportunity.id %}" class="btn btn-warning">Edit</a>
                 {% elif opportunity.status == 'PUBLISHED' %}
-                    <a href="{% url 'edit_opportunity' opportunity.id %}" class="btn btn-warning">Edit</a>
-                    <a href="{% url 'close_opportunity' opportunity.id %}" class="btn btn-danger">Close</a>
+                    <a href="{% url 'opportunities:edit_opportunity' opportunity_id=opportunity.id %}" class="btn btn-warning">Edit</a>
+                    <a href="{% url 'opportunities:close_opportunity' opportunity_id=opportunity.id %}" class="btn btn-danger">Close</a>
                 {% endif %}
             {% endif %}
+
             {% if request.user.role == 'STUDENT' and opportunity.status == 'PUBLISHED' and not is_expired %}
                 {% if student_application %}
-                    <a href="{% url 'applications:withdraw_application' student_application.id %}" class="btn btn-danger">Withdraw</a>
+                    <a href="{% url 'applications:withdraw_application' application_id=student_application.id %}" class="btn btn-danger">Withdraw</a>
                 {% else %}
-                    <a href="{% url 'applications:apply' opportunity.id %}" class="btn btn-primary">Apply</a>
+                    <a href="{% url 'applications:apply' opportunity_id=opportunity.id %}" class="btn btn-primary">Apply</a>
                 {% endif %}
             {% endif %}
         </div>
@@ -42,7 +42,7 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Required Skills</h5>
                     {% if can_manage %}
-                        <a href="{% url 'add_required_skill' opportunity.id %}" class="btn btn-sm btn-primary">+ Add Skill</a>
+                        <a href="{% url 'opportunities:add_required_skill' opportunity_id=opportunity.id %}" class="btn btn-sm btn-primary">+ Add Skill</a>
                     {% endif %}
                 </div>
                 <div class="card-body">
@@ -63,7 +63,7 @@
                                             <td>{{ skill.get_proficiency_level_display }}</td>
                                             <td>
                                                 {% if can_manage %}
-                                                    <a href="{% url 'delete_required_skill' skill.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                                                    <a href="{% url 'opportunities:delete_required_skill' skill_id=skill.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
                                                 {% else %}
                                                     <span class="text-muted">-</span>
                                                 {% endif %}
@@ -100,16 +100,16 @@
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
-                        <a href="{% url 'applications:applicant_list' opportunity.id %}" class="btn btn-primary">
+                        <a href="{% url 'applications:applicant_list' opportunity_id=opportunity.id %}" class="btn btn-primary">
                             <i class="bi bi-people"></i> View Applicants
                         </a>
-                        <a href="{% url 'screening:screening_rule' opportunity.id %}" class="btn btn-outline-primary">
+                        <a href="{% url 'screening:screening_rule' opportunity_id=opportunity.id %}" class="btn btn-outline-primary">
                             <i class="bi bi-funnel"></i> Screening
                         </a>
-                        <a href="{% url 'interviews:interview-rounds' opportunity.id %}" class="btn btn-outline-success">
+                        <a href="{% url 'interviews:interview-rounds' opportunity_id=opportunity.id %}" class="btn btn-outline-success">
                             <i class="bi bi-calendar-event"></i> Interviews
                         </a>
-                        <a href="{% url 'decisions:decision-list' opportunity.id %}" class="btn btn-outline-warning">
+                        <a href="{% url 'decisions:decision-list' opportunity_id=opportunity.id %}" class="btn btn-outline-warning">
                             <i class="bi bi-check-circle"></i> Decisions
                         </a>
                     </div>

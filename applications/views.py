@@ -9,6 +9,20 @@ from students.models import StudentProfile
 from companies.models import RecruiterProfile, Company
 
 
+def _user_can_manage_applications(user, opportunity):
+	"""
+	Check if a user has permission to manage applications for an opportunity.
+	Allow access if:
+	1. User has a RecruiterProfile for the company, OR
+	2. User's company field matches the opportunity's company
+	"""
+	if RecruiterProfile.objects.filter(user=user, company=opportunity.company).exists():
+		return True
+	if user.company and user.company == opportunity.company:
+		return True
+	return False
+
+
 class CompanySelectForm(forms.Form):
     company = forms.ModelChoiceField(
         queryset=Company.objects.none(),
@@ -22,24 +36,24 @@ class CompanySelectForm(forms.Form):
 def apply_view(request, opportunity_id):
     if request.user.role != 'STUDENT':
         messages.error(request, 'Only students can apply to opportunities.')
-        return redirect('opportunity_list')
+        return redirect('opportunities:opportunity_list')
 
     opportunity = get_object_or_404(Opportunity, id=opportunity_id)
     student = get_object_or_404(StudentProfile, user=request.user)
 
     if Application.objects.filter(student=student, opportunity=opportunity).exists():
         messages.info(request, 'You have already applied to this opportunity.')
-        return redirect('opportunity_detail', opportunity_id=opportunity.id)
+        return redirect('opportunities:opportunity_detail', opportunity_id=opportunity.id)
 
     if opportunity.status != 'PUBLISHED':
         messages.error(request, 'This opportunity is not open for applications.')
-        return redirect('opportunity_detail', opportunity_id=opportunity.id)
+        return redirect('opportunities:opportunity_detail', opportunity_id=opportunity.id)
 
     if request.method == 'POST':
         application = Application.objects.create(student=student, opportunity=opportunity)
         ApplicationLog.objects.create(application=application, status='APPLIED')
         messages.success(request, 'Application submitted successfully!')
-        return redirect('opportunity_detail', opportunity_id=opportunity.id)
+        return redirect('opportunities:opportunity_detail', opportunity_id=opportunity.id)
 
     return render(request, 'applications/confirm_apply.html', {'opportunity': opportunity})
 
@@ -48,19 +62,19 @@ def apply_view(request, opportunity_id):
 def withdraw_view(request, application_id):
     if request.user.role != 'STUDENT':
         messages.error(request, 'Only students can withdraw applications.')
-        return redirect('opportunity_list')
+        return redirect('opportunities:opportunity_list')
 
     application = get_object_or_404(Application, id=application_id)
     if application.student.user != request.user:
         messages.error(request, 'You do not have permission to withdraw this application.')
-        return redirect('opportunity_list')
+        return redirect('opportunities:opportunity_list')
 
     if request.method == 'POST':
         application.status = 'REJECTED'
         application.save(update_fields=['status'])
         ApplicationLog.objects.create(application=application, status='REJECTED')
         messages.success(request, 'Application withdrawn successfully.')
-        return redirect('opportunity_detail', opportunity_id=application.opportunity.id)
+        return redirect('opportunities:opportunity_detail', opportunity_id=application.opportunity.id)
 
     return render(request, 'applications/confirm_withdraw.html', {'application': application})
 
@@ -72,9 +86,9 @@ def applicant_list_view(request, opportunity_id):
         return redirect('home')
 
     opportunity = get_object_or_404(Opportunity, id=opportunity_id)
-    if not RecruiterProfile.objects.filter(user=request.user, company=opportunity.company).exists():
+    if not _user_can_manage_applications(request.user, opportunity):
         messages.error(request, 'You do not have permission to view applicants for this opportunity.')
-        return redirect('opportunity_list')
+        return redirect('opportunities:opportunity_list')
 
     applications = Application.objects.filter(opportunity=opportunity).select_related('student__user')
 
@@ -130,9 +144,9 @@ def shortlist_application_view(request, application_id):
 
     application = get_object_or_404(Application, id=application_id)
 
-    if not RecruiterProfile.objects.filter(user=request.user, company=application.opportunity.company).exists():
+    if not _user_can_manage_applications(request.user, application.opportunity):
         messages.error(request, 'You do not have permission to modify this application.')
-        return redirect('opportunity_list')
+        return redirect('opportunities:opportunity_list')
 
     application.status = 'SHORTLISTED'
     application.save(update_fields=['status'])
@@ -150,9 +164,9 @@ def reject_application_view(request, application_id):
 
     application = get_object_or_404(Application, id=application_id)
 
-    if not RecruiterProfile.objects.filter(user=request.user, company=application.opportunity.company).exists():
+    if not _user_can_manage_applications(request.user, application.opportunity):
         messages.error(request, 'You do not have permission to modify this application.')
-        return redirect('opportunity_list')
+        return redirect('opportunities:opportunity_list')
 
     application.status = 'REJECTED'
     application.save(update_fields=['status'])

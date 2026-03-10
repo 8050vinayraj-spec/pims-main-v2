@@ -82,7 +82,7 @@
                 <div class="card mt-4">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">Required Skills</h5>
-                        <a href="{% url 'opportunities:add_required_skill' opportunity.id %}" class="btn btn-sm btn-primary">+ Add Skill</a>
+                        <a href="{% url 'opportunities:add_required_skill' opportunity_id=opportunity.id %}" class="btn btn-sm btn-primary">+ Add Skill</a>
                     </div>
                     <div class="card-body">
                         {% if opportunity.required_skills.all %}
@@ -99,7 +99,7 @@
                                             <tr>
                                                 <td>{{ skill.skill.name }}</td>
                                                 <td>
-                                                    <a href="{% url 'opportunities:delete_required_skill' skill.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                                                    <a href="{% url 'opportunities:delete_required_skill' skill_id=skill.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
                                                 </td>
                                             </tr>
                                         {% endfor %}

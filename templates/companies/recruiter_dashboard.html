@@ -16,7 +16,7 @@
                 <p><strong>Opportunities Posted:</strong> {{ opportunities_count }}</p>
 
                 {% if company.verified %}
-                    <a href="{% url 'opportunities:create' company.id %}" class="btn btn-primary">
+                    <a href="{% url 'opportunities:create_opportunity' %}" class="btn btn-primary">
                         Post Opportunity
                     </a>
                 {% else %}

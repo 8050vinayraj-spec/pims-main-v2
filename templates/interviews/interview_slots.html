@@ -23,7 +23,7 @@
     <div class="alert alert-info mb-4">
         <strong><i class="fas fa-info-circle"></i> Workflow:</strong> 
         Create slots → <a href="{% url 'interviews:assign-students' round.id %}" class="alert-link">Assign students</a> → 
-        Conduct interviews → <a href="{% url 'decisions:decision-list' opportunity.id %}" class="alert-link">Make hiring decisions</a>
+        Conduct interviews → <a href="{% url 'decisions:decision-list' opportunity_id=opportunity.id %}" class="alert-link">Make hiring decisions</a>
     </div>
 
     {% if slots %}
@@ -81,7 +81,7 @@
     {% endif %}
 
     <div class="mt-4">
-        <a href="{% url 'interviews:interview-rounds' opportunity.id %}" class="btn btn-secondary">
+        <a href="{% url 'interviews:interview-rounds' opportunity_id=opportunity.id %}" class="btn btn-secondary">
             <i class="fas fa-arrow-left"></i> Back to Rounds
         </a>
     </div>

@@ -8,6 +8,20 @@ from applications.models import Application
 from companies.models import RecruiterProfile
 
 
+def _user_can_manage_screening(user, opportunity):
+	"""
+	Check if a user has permission to manage screening for an opportunity.
+	Allow access if:
+	1. User has a RecruiterProfile for the company, OR
+	2. User's company field matches the opportunity's company
+	"""
+	if RecruiterProfile.objects.filter(user=user, company=opportunity.company).exists():
+		return True
+	if user.company and user.company == opportunity.company:
+		return True
+	return False
+
+
 def _matches_rule(student, rule):
 	if student.cgpa < rule.min_cgpa:
 		return False, f"CGPA below {rule.min_cgpa}"
@@ -25,9 +39,9 @@ def screening_rule_view(request, opportunity_id):
 		return redirect('home')
 
 	opportunity = get_object_or_404(Opportunity, id=opportunity_id)
-	if not RecruiterProfile.objects.filter(user=request.user, company=opportunity.company).exists():
+	if not _user_can_manage_screening(request.user, opportunity):
 		messages.error(request, 'You do not have permission to manage screening for this opportunity.')
-		return redirect('opportunity_detail', opportunity_id=opportunity.id)
+		return redirect('opportunities:opportunity_detail', opportunity_id=opportunity.id)
 
 	rule, _ = ScreeningRule.objects.get_or_create(opportunity=opportunity)
 
@@ -54,9 +68,9 @@ def run_screening_view(request, opportunity_id):
 		return redirect('home')
 
 	opportunity = get_object_or_404(Opportunity, id=opportunity_id)
-	if not RecruiterProfile.objects.filter(user=request.user, company=opportunity.company).exists():
+	if not _user_can_manage_screening(request.user, opportunity):
 		messages.error(request, 'You do not have permission to run screening for this opportunity.')
-		return redirect('opportunity_detail', opportunity_id=opportunity.id)
+		return redirect('opportunities:opportunity_detail', opportunity_id=opportunity.id)
 
 	rule = get_object_or_404(ScreeningRule, opportunity=opportunity)
 	applications = Application.objects.filter(opportunity=opportunity).select_related('student')
@@ -82,9 +96,9 @@ def screening_results_view(request, opportunity_id):
 		return redirect('home')
 
 	opportunity = get_object_or_404(Opportunity, id=opportunity_id)
-	if not RecruiterProfile.objects.filter(user=request.user, company=opportunity.company).exists():
+	if not _user_can_manage_screening(request.user, opportunity):
 		messages.error(request, 'You do not have permission to view screening results for this opportunity.')
-		return redirect('opportunity_detail', opportunity_id=opportunity.id)
+		return redirect('opportunities:opportunity_detail', opportunity_id=opportunity.id)
 
 	results = ScreeningResult.objects.filter(application__opportunity=opportunity).select_related('application__student__user')
 

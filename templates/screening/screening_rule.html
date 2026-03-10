@@ -35,9 +35,9 @@
             </div>
 
             <div class="mt-3 text-end">
-                <a href="{% url 'screening:run_screening' opportunity.id %}" class="btn btn-success">Run Screening</a>
-                <a href="{% url 'screening:screening_results' opportunity.id %}" class="btn btn-secondary">View Results</a>
-                <a href="{% url 'applications:applicant_list' opportunity.id %}" class="btn btn-info">View Applicants</a>
+                <a href="{% url 'screening:run_screening' opportunity_id=opportunity.id %}" class="btn btn-success">Run Screening</a>
+                <a href="{% url 'screening:screening_results' opportunity_id=opportunity.id %}" class="btn btn-secondary">View Results</a>
+                <a href="{% url 'applications:applicant_list' opportunity_id=opportunity.id %}" class="btn btn-info">View Applicants</a>
             </div>
         </div>
     </div>
