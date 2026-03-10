@@ -3,34 +3,39 @@
 {% block page_title %}Recruiter Approvals{% endblock %}
 
 {% block content %}
-<h2>Pending Recruiter Approvals</h2>
+<div class="container mt-4">
+    <h2>Pending Recruiter Approvals</h2>
 
-{% if pending_recruiters %}
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Company</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for recruiter in pending_recruiters %}
+    {% if pending_approvals %}
+        <table class="table table-bordered">
+            <thead>
                 <tr>
-                    <td>{{ recruiter.get_full_name }}</td>
-                    <td>{{ recruiter.email }}</td>
-                    <td>{{ recruiter.recruiterprofile.company.name }}</td>
-                    <td>
-                        <!-- You can wire these up to actual approval logic later -->
-                        <button class="btn btn-success btn-sm">Approve</button>
-                        <button class="btn btn-danger btn-sm">Reject</button>
-                    </td>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Actions</th>
                 </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-{% else %}
-    <p>No pending recruiter approvals at the moment.</p>
-{% endif %}
+            </thead>
+            <tbody>
+                {% for approval in pending_approvals %}
+                    <tr>
+                        <td>{{ approval.user.get_full_name }}</td>
+                        <td>{{ approval.user.email }}</td>
+                        <td>{{ approval.user.get_role_display }}</td>
+                        <td><span class="badge bg-warning">{{ approval.get_status_display }}</span></td>
+                        <td>
+                            <a href="{% url 'accounts:officer_approval' %}" class="btn btn-success btn-sm">Manage</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <p class="text-muted mt-3">
+            <a href="{% url 'accounts:officer_approval' %}" class="btn btn-primary">Go to Full Approval Management</a>
+        </p>
+    {% else %}
+        <p>No pending recruiter approvals at the moment.</p>
+    {% endif %}
+</div>
 {% endblock %}

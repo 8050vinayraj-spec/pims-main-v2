@@ -49,9 +49,14 @@
             {% if pending_offers %}
                 <ul class="list-group">
                     {% for app in pending_offers %}
-                        <li class="list-group-item">
-                            <strong>{{ app.opportunity.title }}</strong> at {{ app.opportunity.company.name }}
-                            <span class="badge bg-warning">Pending Response</span>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ app.opportunity.title }}</strong> at {{ app.opportunity.company.name }}
+                                <span class="badge bg-warning">Pending Response</span>
+                            </div>
+                            <a href="{% url 'decisions:offer-response' decision_id=app.hiring_decision.id %}" class="btn btn-success btn-sm">
+                                Respond to Offer
+                            </a>
                         </li>
                     {% endfor %}
                 </ul>

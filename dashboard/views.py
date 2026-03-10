@@ -115,10 +115,12 @@ def officer_approval_view(request):
     if not (hasattr(request.user, 'role') and request.user.role == 'OFFICER'):
         return HttpResponseForbidden("Only officers can access this.")
 
-    pending_recruiters = CustomUser.objects.filter(role='RECRUITER', is_approved=False)
+    from accounts.models import AccountApproval
+    
+    pending_approvals = AccountApproval.objects.filter(status='PENDING').select_related('user')
 
     context = {
-        'pending_recruiters': pending_recruiters,
+        'pending_approvals': pending_approvals,
         'page_title': 'Recruiter Approvals',
     }
     return render(request, 'dashboard/officer_approval.html', context)
@@ -129,10 +131,12 @@ def verify_company_view(request):
     if not (hasattr(request.user, 'role') and request.user.role == 'OFFICER'):
         return HttpResponseForbidden("Only officers can access this.")
 
-    companies = Company.objects.filter(verified=False)
+    pending_companies = Company.objects.filter(verified=False).select_related('verified_by')
+    verified_companies = Company.objects.filter(verified=True).select_related('verified_by')
 
     context = {
-        'companies': companies,
+        'pending_companies': pending_companies,
+        'verified_companies': verified_companies,
         'page_title': 'Verify Companies',
     }
     return render(request, 'dashboard/verify_company.html', context)

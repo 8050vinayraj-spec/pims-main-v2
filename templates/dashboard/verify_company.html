@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="container-fluid py-4">
-    <h2 class="mb-4">Pending Company Verifications</h2>
+    <h2 class="mb-4">Company Verification Management</h2>
 
     {% if messages %}
         <div class="messages">
@@ -17,56 +17,103 @@
         </div>
     {% endif %}
 
-    {% if companies %}
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover">
-                <thead class="table-light">
-                    <tr>
-                        <th>Company Name</th>
-                        <th>Website</th>
-                        <th>Recruiter</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for company in companies %}
-                        <tr>
-                            <td>{{ company.name }}</td>
-                            <td>
-                                {% if company.website %}
-                                    <a href="{{ company.website }}" target="_blank">{{ company.website }}</a>
-                                {% else %}
-                                    N/A
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if company.recruiters.first.user.get_full_name %}
-                                    {{ company.recruiters.first.user.get_full_name }}
-                                {% else %}
-                                    N/A
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div class="btn-group" role="group">
-                                    <form method="post" action="{% url 'dashboard:verify_company' company_id=company.id %}" style="display:inline;">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-success btn-sm">Verify</button>
-                                    </form>
-                                    <form method="post" action="{% url 'dashboard:reject_company' company_id=company.id %}" style="display:inline;">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to reject this company?');">Reject</button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <!-- Pending Verifications Section -->
+    <div class="card mb-4">
+        <div class="card-header bg-warning">
+            <h5 class="mb-0">Pending Company Verifications ({{ pending_companies.count }})</h5>
         </div>
-    {% else %}
-        <div class="alert alert-info" role="alert">
-            <strong>✓ All companies are verified!</strong> No pending verifications at the moment.
+        <div class="card-body">
+            {% if pending_companies %}
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Company Name</th>
+                                <th>Website</th>
+                                <th>Industry</th>
+                                <th>City</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for company in pending_companies %}
+                                <tr>
+                                    <td><strong>{{ company.name }}</strong></td>
+                                    <td>
+                                        {% if company.website %}
+                                            <a href="{{ company.website }}" target="_blank" class="text-decoration-none">{{ company.website }}</a>
+                                        {% else %}
+                                            <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ company.get_industry_display }}</td>
+                                    <td>{{ company.city|default:"N/A" }}</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <form method="post" action="{% url 'dashboard:verify_company' company_id=company.id %}" style="display:inline;">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-success">Verify</button>
+                                            </form>
+                                            <form method="post" action="{% url 'dashboard:reject_company' company_id=company.id %}" style="display:inline;">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to reject this company?');">Reject</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-success mb-0">
+                    <strong>✓ No pending verifications!</strong> All companies have been reviewed.
+                </div>
+            {% endif %}
         </div>
-    {% endif %}
+    </div>
+
+    <!-- Verified Companies Section -->
+    <div class="card">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">Verified Companies ({{ verified_companies.count }})</h5>
+        </div>
+        <div class="card-body">
+            {% if verified_companies %}
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Company Name</th>
+                                <th>Website</th>
+                                <th>Industry</th>
+                                <th>Verified By</th>
+                                <th>Verified At</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for company in verified_companies %}
+                                <tr>
+                                    <td>{{ company.name }}</td>
+                                    <td>
+                                        {% if company.website %}
+                                            <a href="{{ company.website }}" target="_blank" class="text-decoration-none">{{ company.website }}</a>
+                                        {% else %}
+                                            <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ company.get_industry_display }}</td>
+                                    <td>{{ company.verified_by.get_full_name|default:"System" }}</td>
+                                    <td>{{ company.verified_at|date:"M d, Y" }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted mb-0">No verified companies yet.</p>
+            {% endif %}
+        </div>
+    </div>
 </div>
 {% endblock %}
