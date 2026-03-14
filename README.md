@@ -1,6 +1,6 @@
-# PIMS - Placement & Recruitment Information Management System
+# PIMS - Placements and Internships Management System
 
-A comprehensive Django-based web application designed to streamline the entire recruitment lifecycle, from job posting to placement record management. PIMS facilitates seamless collaboration between students, recruiters, and placement officers.
+A comprehensive Django-based web application designed to streamline the entire placements and internships lifecycle, from job posting to placement record management. PIMS facilitates seamless collaboration between students, recruiters, and placement officers.
 
 ## 🌟 Key Features
 
