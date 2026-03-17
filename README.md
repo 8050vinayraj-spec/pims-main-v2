@@ -231,12 +231,6 @@ python manage.py shell
 python manage.py test
 ```
 
-## 🌐 Deployment
-
-### Using Gunicorn
-```bash
-gunicorn pims.wsgi:application --bind 0.0.0.0:8000
-```
 
 ### Using WhiteNoise for Static Files
 Static files are configured to be served via WhiteNoise for production efficiency.
@@ -260,9 +254,6 @@ Contributions are welcome! Please follow these steps:
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 👥 Authors
-
-- Your Name/Organization
 
 ## 🆘 Troubleshooting
 
