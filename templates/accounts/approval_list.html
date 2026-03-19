@@ -11,7 +11,7 @@
         <li class="nav-item" role="presentation">
             <button class="nav-link active" id="accounts-tab" data-bs-toggle="tab" data-bs-target="#accounts" type="button">
                 👤 Account Approvals
-                <span class="badge bg-warning">{{ pending_recruiters|length|add:pending_students|length }}</span>
+                <span class="badge bg-warning">{{ pending_recruiters|length|add:pending_students|length|add:pending_officers|length }}</span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
@@ -189,6 +189,72 @@
             {% else %}
                 <div class="alert alert-info">No pending student approvals.</div>
             {% endif %}
+            
+            <hr class="my-5">
+            
+            <!-- Pending Officer Approvals -->
+            <h4 class="mb-4">
+                <span class="badge bg-warning">{{ pending_officers|length }}</span> Pending Officer Approvals
+            </h4>
+            
+            {% if pending_officers %}
+                <div class="row">
+                    {% for approval in pending_officers %}
+                        <div class="col-md-6 mb-4">
+                            <div class="card border-danger">
+                                <div class="card-header bg-danger text-white">
+                                    <strong>👮 Officer Account</strong>
+                                </div>
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ approval.user.get_full_name|default:approval.user.username }}</h5>
+                                    <p class="text-muted mb-2"><strong>Username:</strong> {{ approval.user.username }}</p>
+                                    <p class="text-muted mb-2"><strong>Email:</strong> {{ approval.user.email }}</p>
+                                    <p class="text-muted mb-3"><strong>Role:</strong> <span class="badge bg-secondary">{{ approval.user.get_role_display }}</span></p>
+                                    <p class="text-muted small mb-3"><strong>Applied:</strong> {{ approval.created_at|date:"M d, Y H:i" }}</p>
+                                    
+                                    <form method="POST" action="{% url 'accounts:officer_approval' %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="approval_id" value="{{ approval.id }}">
+                                        
+                                        <div class="mb-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="action" id="approve_{{ approval.id }}" value="APPROVE" checked>
+                                                <label class="form-check-label" for="approve_{{ approval.id }}">
+                                                    ✓ Approve
+                                                </label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="action" id="reject_{{ approval.id }}" value="REJECT">
+                                                <label class="form-check-label" for="reject_{{ approval.id }}">
+                                                    ✗ Reject
+                                                </label>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3" id="rejection_reason_{{ approval.id }}" style="display: none;">
+                                            <label for="rejection_reason_{{ approval.id }}" class="form-label">Reason for Rejection</label>
+                                            <textarea name="rejection_reason" id="rejection_reason_{{ approval.id }}" class="form-control" rows="3"></textarea>
+                                        </div>
+                                        
+                                        <button type="submit" class="btn btn-primary w-100">Submit Decision</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <script>
+                            document.getElementById('reject_{{ approval.id }}').addEventListener('change', function() {
+                                document.getElementById('rejection_reason_{{ approval.id }}').style.display = 'block';
+                            });
+                            document.getElementById('approve_{{ approval.id }}').addEventListener('change', function() {
+                                document.getElementById('rejection_reason_{{ approval.id }}').style.display = 'none';
+                            });
+                        </script>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info">No pending officer approvals.</div>
+            {% endif %}
         </div>
 
         <!-- ==================== APPROVED ACCOUNTS TAB ==================== -->
@@ -296,33 +362,37 @@
         <!-- ==================== APPROVED COMPANIES TAB ==================== -->
         <div class="tab-pane fade" id="approved-companies" role="tabpanel">
             <h4 class="mb-4">
-                <span class="badge bg-success">{{ approved_companies|length }}</span> Approved Companies
+                <span class="badge bg-success">{{ verified_companies|length }}</span> Verified Companies
             </h4>
             
-            {% if approved_companies %}
+            {% if verified_companies %}
                 <div class="row">
-                    {% for company_approval in approved_companies %}
+                    {% for company in verified_companies %}
                         <div class="col-md-6 mb-4">
                             <div class="card border-success">
                                 <div class="card-header bg-success text-white">
                                     <strong>✓ Verified Company</strong>
                                 </div>
                                 <div class="card-body">
-                                    <h5 class="card-title">{{ company_approval.company.name }}</h5>
-                                    <p class="text-muted mb-2"><strong>Website:</strong> <a href="{{ company_approval.company.website }}" target="_blank">{{ company_approval.company.website }}</a></p>
-                                    <p class="text-muted mb-2"><strong>Industry:</strong> {{ company_approval.company.get_industry_display }}</p>
-                                    <p class="text-muted mb-2"><strong>City:</strong> {{ company_approval.company.city|default:"N/A" }}</p>
-                                    <p class="text-muted mb-2"><strong>Description:</strong> {{ company_approval.company.description|truncatewords:20 }}</p>
+                                    <h5 class="card-title">{{ company.name }}</h5>
+                                    <p class="text-muted mb-2"><strong>Website:</strong> <a href="{{ company.website }}" target="_blank">{{ company.website }}</a></p>
+                                    <p class="text-muted mb-2"><strong>Industry:</strong> {{ company.get_industry_display }}</p>
+                                    <p class="text-muted mb-2"><strong>City:</strong> {{ company.city|default:"N/A" }}</p>
+                                    <p class="text-muted mb-2"><strong>Description:</strong> {{ company.description|truncatewords:20 }}</p>
                                     <p class="text-muted mb-2"><strong>Status:</strong> <span class="badge bg-success">Verified</span></p>
-                                    <p class="text-muted small mb-3"><strong>Verified on:</strong> {{ company_approval.updated_at|date:"M d, Y H:i" }}</p>
-                                    <p class="text-muted small mb-3"><strong>Verified by:</strong> {{ company_approval.approved_by.get_full_name }}</p>
+                                    {% if company.verified_by %}
+                                        <p class="text-muted small mb-3"><strong>Verified by:</strong> {{ company.verified_by.get_full_name }}</p>
+                                    {% endif %}
+                                    {% if company.verified_at %}
+                                        <p class="text-muted small mb-3"><strong>Verified on:</strong> {{ company.verified_at|date:"M d, Y H:i" }}</p>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
                     {% endfor %}
                 </div>
             {% else %}
-                <div class="alert alert-info">No approved companies yet.</div>
+                <div class="alert alert-info">No verified companies yet.</div>
             {% endif %}
         </div>
 

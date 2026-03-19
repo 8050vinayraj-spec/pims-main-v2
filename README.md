@@ -2,6 +2,8 @@
 
 A comprehensive Django-based web application designed to streamline the entire placements and internships lifecycle, from job posting to placement record management. PIMS facilitates seamless collaboration between students, recruiters, and placement officers.
 
+**Latest Update (March 19, 2026):** ✅ Officer approvals, Enhanced dashboard with opportunities tracking, and Verified companies display now fully functional!
+
 ## 🌟 Key Features
 
 ### For Students
@@ -23,9 +25,12 @@ A comprehensive Django-based web application designed to streamline the entire p
 ### For Placement Officers
 - **System Administration** - Manage users and approvals
 - **Company Approval** - Verify and approve recruiter companies
-- **Recruiter Verification** - Approve/reject recruiter registrations
-- **Dashboard Analytics** - View placement statistics and metrics
+- **Recruiter Verification** - Approve/reject recruiter registrations ✅ NEW
+- **Officer Approval** - Approve/reject new officer account registrations ✅ NEW
+- **Dashboard Analytics** - View placement statistics and metrics ✅ ENHANCED
+- **Opportunities Tracking** - View all opportunities created for students with status ✅ NEW
 - **Notification Management** - Monitor system notifications
+- **Verified Companies** - View all verified companies and their details ✅ ENHANCED
 
 ## 🛠️ Tech Stack
 
@@ -118,44 +123,60 @@ pims/
 - Track application status
 - View interview schedules
 - Check placement records
+- **Account Approval Required**: Pending officer approval after signup ✅
 
 ### Recruiter
-- Post job opportunities
-- Define required skills
+- Post job opportunities for assigned company
+- Define required skills and requirements
 - Review student applications
 - Schedule interviews
 - Confirm placements
-- *Requires account approval by Officer*
+- *Requires account approval + company assignment by Officer* ✅
 
 ### Officer
-- Administrative access
-- Approve/reject recruiter registrations
-- Verify company information
-- View system-wide analytics
-- Manage notifications
+- **Administrative Access**: Manage all users and system settings
+- **Account Approvals**: Approve/reject students, recruiters, and officers ✅ NEW
+- **Company Management**: Assign companies to recruiters during approval ✅
+- **Company Verification**: Verify and manage company information
+- **Dashboard Analytics**: View comprehensive system statistics ✅ ENHANCED
+- **Opportunities Tracking**: Monitor all job opportunities with status indicators ✅ NEW
+- **System Notifications**: Manage and track system notifications
+- **Account Deletion**: Delete approved accounts when needed ✅
+- **Verified Companies**: View all verified companies and their details ✅ ENHANCED
 
 ## 📖 Core Workflow
 
+### 0. Account Approval (NEW) ✅
+- **New User Registration**: Student, Recruiter, or Officer creates account
+- **Pending Approvals**: New accounts wait for officer approval
+- **Officer Review**: Officer reviews pending approvals organized by role
+- **Recruiter Assignment**: Officers assign companies to approved recruiters
+- **Account Activation**: Approved users can now log in and use the system
+
 ### 1. Job Publication
-- Recruiter posts opportunity
+- Recruiter (after approval) posts opportunity for their assigned company
 - Defines required skills and qualifications
 - Sets application deadline
 - Opportunity becomes visible to students
+- Officer can track all opportunities from dashboard
 
 ### 2. Student Application
 - Student discovers opportunity
 - Submits application with resume
 - Enters required information
+- Status tracked in real-time
 
 ### 3. Screening & Selection
 - Recruiter reviews applications
 - Conducts interviews
 - Selects candidates
+- Officer monitors application flow from dashboard
 
 ### 4. Placement Confirmation
 - Selected candidates confirmed
 - Placement records created
 - Confirmation sent to students
+- Officer views all placement statistics
 
 ## ⚙️ Configuration
 
@@ -287,4 +308,40 @@ For support, please open an issue on GitHub or contact the development team.
 
 ---
 
-**Last Updated:** March 2026
+## 🆕 Recent Enhancements (March 19, 2026)
+
+### Officer Approval System ✅
+- **New Approval Section**: Pending officer approvals displayed separately with 👮 badge
+- **Role-Based Approvals**: Officers can approve students, recruiters, and other officers
+- **Company Assignment**: Assign companies to recruiters during approval process
+- **Tab-Based Interface**: Organized approval management with tabs for different approval types
+- **Approval Status Tracking**: Easy visibility of pending, approved, and rejected accounts
+
+### Enhanced Officer Dashboard ✅
+- **Opportunities for Students Metric**: Quick view of total published opportunities
+- **Opportunities Tracking Table**: Comprehensive table showing all opportunities with:
+  - Job title, company name, job type (Full Time Job/Internship)
+  - Package/Stipend amount, minimum CGPA requirement
+  - Application deadline, posting date
+  - **Status Indicators**: 🟢 Active | 🟡 Expired | 🔴 Closed | ⚫ Draft
+- **Historical Opportunity Data**: See closed and expired opportunities for reference
+- **Timeline Tracking**: Easily identify when opportunities were created and their deadlines
+
+### Verified Companies Display ✅
+- **Fixed Display**: All 4 verified companies now properly shown in Approvals Management
+- **Company Details**: Website, industry, location, and verification information
+- **Easy Access**: Quick view in "Approved Companies" tab without needing CompanyApproval records
+- **All Companies Visible**: Tech Solutions, Financial Services Inc, Global Consulting, Healthcare Solutions
+
+### Security & Features
+- **CAPTCHA Protection**: Math-based CAPTCHA on login (3+7=10) and signup (5+3=8)
+- **Phone Number Validation**: 10-digit phone entry with 45+ country codes support
+- **CGPA Validation**: CGPA format with up to 5 decimal places, locked after first entry
+- **Custom Branch Selection**: Support for custom branch entries with "Other" option
+- **Batch Skills Addition**: Add multiple skills at once during profile setup
+- **Account Deletion**: Officers can delete approved accounts with confirmation dialog
+- **Cascading Data Deletion**: All associated data properly cleaned up on account deletion
+
+---
+
+**Last Updated:** March 19, 2026 ✅ **All New Features Active**

@@ -80,6 +80,7 @@ def officer_dashboard_view(request):
     total_students = StudentProfile.objects.count()
     total_companies = Company.objects.count()
     total_opportunities = Opportunity.objects.filter(status='PUBLISHED').count()
+    opportunities_for_students = Opportunity.objects.filter(status='PUBLISHED').count()  # ✅ NEW: Opportunities created for students
     total_applications = Application.objects.count()
 
     placed_students = PlacementRecord.objects.values('student').distinct().count()
@@ -92,18 +93,25 @@ def officer_dashboard_view(request):
         'student', 'opportunity', 'opportunity__company', 'hiring_decision', 'hiring_decision__offer_response'
     ).order_by('-applied_at')[:10]
 
+    # ✅ NEW: Get all published opportunities for students with company details (including expired/closed ones)
+    published_opportunities = Opportunity.objects.filter(
+        status__in=['PUBLISHED', 'CLOSED']
+    ).select_related('company').order_by('-created_at')
+
     avg_package = PlacementRecord.objects.aggregate(avg=Avg('package'))['avg'] or 0
 
     context = {
         'total_students': total_students,
         'total_companies': total_companies,
         'total_opportunities': total_opportunities,
+        'opportunities_for_students': opportunities_for_students,  # ✅ NEW: Opportunities for students
         'total_applications': total_applications,
         'placed_students': placed_students,
         'placement_rate': placement_rate,
         'pending_companies': pending_companies,
         'pending_recruiters': pending_recruiters,
         'recent_applications': recent_applications,
+        'published_opportunities': published_opportunities,  # ✅ NEW: List of opportunities
         'avg_package': avg_package,
     }
     return render(request, 'dashboard/officer_dashboard.html', context)

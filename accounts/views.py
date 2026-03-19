@@ -193,12 +193,16 @@ def officer_approval_view(request):
     pending_all = AccountApproval.objects.filter(status='PENDING')
     pending_recruiters = pending_all.filter(user__role='RECRUITER')
     pending_students = pending_all.filter(user__role='STUDENT')
+    pending_officers = pending_all.filter(user__role='OFFICER')
     
     # ✅ NEW: Get company approvals
     from companies.models import CompanyApproval
     pending_companies = CompanyApproval.objects.filter(status='PENDING')
     approved_companies = CompanyApproval.objects.filter(status='APPROVED')
     rejected_companies = CompanyApproval.objects.filter(status='REJECTED')
+    
+    # ✅ NEW: Get all verified companies (for display)
+    verified_companies = Company.objects.filter(verified=True)
     
     # ✅ NEW: Get opportunity approvals
     from opportunities.models import OpportunityApproval
@@ -210,6 +214,7 @@ def officer_approval_view(request):
         # Account approvals
         'pending_recruiters': pending_recruiters,
         'pending_students': pending_students,
+        'pending_officers': pending_officers,
         'pending_approvals': pending_all,
         'approved_approvals': AccountApproval.objects.filter(status='APPROVED'),
         'rejected_approvals': AccountApproval.objects.filter(status='REJECTED'),
@@ -217,6 +222,7 @@ def officer_approval_view(request):
         'pending_companies': pending_companies,
         'approved_companies': approved_companies,
         'rejected_companies': rejected_companies,
+        'verified_companies': verified_companies,  # ✅ NEW: All verified companies
         # Opportunity approvals
         'pending_opportunities': pending_opportunities,
         'approved_opportunities': approved_opportunities,

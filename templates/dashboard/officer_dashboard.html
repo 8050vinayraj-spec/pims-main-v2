@@ -37,8 +37,8 @@
         <div class="col-md-3">
             <div class="card text-center">
                 <div class="card-body">
-                    <h5 class="card-title text-muted">Opportunities</h5>
-                    <h2 class="card-text" style="color: #F59E0B;">{{ total_opportunities }}</h2>
+                    <h5 class="card-title text-muted">Opportunities for Students</h5>
+                    <h2 class="card-text" style="color: #F59E0B;">{{ opportunities_for_students }}</h2>
                 </div>
             </div>
         </div>
@@ -156,6 +156,71 @@
                                     {% endif %}
                                 </td>
                                 <td><small>{{ app.applied_at|date:"d M, Y" }}</small></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✅ NEW: Opportunities Created for Students -->
+    <div class="row mt-5">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">💼 Opportunities Created for Students</h6>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Opportunity Title</th>
+                                <th>Company</th>
+                                <th>Type</th>
+                                <th>Package/Stipend</th>
+                                <th>Min CGPA</th>
+                                <th>Deadline</th>
+                                <th>Status</th>
+                                <th>Posted On</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for opportunity in published_opportunities %}
+                            <tr>
+                                <td><strong>{{ opportunity.title }}</strong></td>
+                                <td>{{ opportunity.company.name }}</td>
+                                <td>
+                                    {% if opportunity.type == 'JOB' %}
+                                        <span class="badge bg-success">Full Time Job</span>
+                                    {% else %}
+                                        <span class="badge bg-info">Internship</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ opportunity.ctc_or_stipend }}</td>
+                                <td>{{ opportunity.min_cgpa }}</td>
+                                <td><small>{{ opportunity.deadline|date:"d M, Y" }}</small></td>
+                                <td>
+                                    {% if opportunity.status == 'PUBLISHED' %}
+                                        {% if opportunity.is_expired %}
+                                            <span class="badge bg-warning">Expired</span>
+                                        {% else %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% endif %}
+                                    {% elif opportunity.status == 'CLOSED' %}
+                                        <span class="badge bg-danger">Closed</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Draft</span>
+                                    {% endif %}
+                                </td>
+                                <td><small>{{ opportunity.published_at|date:"d M, Y H:i" }}</small></td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center text-muted py-4">
+                                    No opportunities created for students yet.
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
