@@ -2,60 +2,174 @@
 
 {% block title %}Add Skill - PIMS{% endblock %}
 
-{% block page_title %}Add Skill{% endblock %}
+{% block page_title %}Add Skills{% endblock %}
 
 {% block content %}
 <div class="container">
     <div class="row justify-content-center">
-        <div class="col-md-6">
+        <div class="col-md-8">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">Add New Skill</h5>
+                    <h5 class="mb-0">Add Multiple Skills</h5>
                 </div>
                 <div class="card-body">
-                    <form method="POST">
+                    <form method="POST" id="skillsForm">
                         {% csrf_token %}
+                        
+                        <div id="skillsContainer">
+                            <!-- Skills rows will be added here dynamically -->
+                            <div class="skill-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Skill Name <span class="text-danger">*</span></label>
+                                        <input type="text" name="skill_names" class="form-control skill-input" placeholder="e.g., Python, Django, React" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Category <span class="text-danger">*</span></label>
+                                        <select name="categories" class="form-select" required>
+                                            <option value="">Select Category</option>
+                                            <option value="PROGRAMMING">Programming Language</option>
+                                            <option value="FRAMEWORK">Framework/Library</option>
+                                            <option value="DATABASE">Database</option>
+                                            <option value="TOOL">Tool/Software</option>
+                                            <option value="LANGUAGE">Language</option>
+                                            <option value="OTHER">Other</option>
+                                        </select>
+                                    </div>
+                                </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Skill Name</label>
-                            <input type="text" name="skill_name" class="form-control" placeholder="e.g., Python, Django, React" required>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Proficiency Level <span class="text-danger">*</span></label>
+                                        <select name="proficiencies" class="form-select" required>
+                                            <option value="">Select Level</option>
+                                            <option value="BEGINNER">Beginner</option>
+                                            <option value="INTERMEDIATE">Intermediate</option>
+                                            <option value="ADVANCED">Advanced</option>
+                                            <option value="EXPERT">Expert</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Years of Experience <span class="text-danger">*</span></label>
+                                        <input type="number" name="years_experiences" class="form-control" step="0.5" min="0" placeholder="0.5" required>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex justify-content-end gap-2">
+                                    <button type="button" class="btn btn-sm btn-outline-danger remove-skill" style="display: none;">Remove</button>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Category</label>
-                            <select name="category" class="form-select" required>
-                                <option value="">Select Category</option>
-                                <option value="PROGRAMMING">Programming Language</option>
-                                <option value="FRAMEWORK">Framework/Library</option>
-                                <option value="DATABASE">Database</option>
-                                <option value="TOOL">Tool/Software</option>
-                                <option value="LANGUAGE">Language</option>
-                                <option value="OTHER">Other</option>
-                            </select>
+                            <button type="button" id="addSkillBtn" class="btn btn-outline-primary">+ Add Another Skill</button>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Proficiency Level</label>
-                            <select name="proficiency" class="form-select" required>
-                                <option value="">Select Level</option>
-                                <option value="BEGINNER">Beginner</option>
-                                <option value="INTERMEDIATE">Intermediate</option>
-                                <option value="ADVANCED">Advanced</option>
-                                <option value="EXPERT">Expert</option>
-                            </select>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">Save All Skills</button>
+                            <a href="{% url 'students:skills' %}" class="btn btn-secondary">Cancel</a>
                         </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Years of Experience</label>
-                            <input type="number" name="years_of_experience" class="form-control" step="0.5" min="0" placeholder="0.5" required>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary w-100 mb-2">Add Skill</button>
-                        <a href="{% url 'students:skills' %}" class="btn btn-secondary w-100">Cancel</a>          
-                              </form>
+                    </form>
                 </div>
+            </div>
+
+            <div class="alert alert-info mt-4">
+                <strong>Tip:</strong> You can add multiple skills at once! Click "+ Add Another Skill" to add more rows, then submit the form to save all skills together.
             </div>
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const skillsContainer = document.getElementById('skillsContainer');
+    const addSkillBtn = document.getElementById('addSkillBtn');
+    let skillCount = 1;
+
+    function updateRemoveButtons() {
+        const rows = document.querySelectorAll('.skill-row');
+        rows.forEach(row => {
+            const removeBtn = row.querySelector('.remove-skill');
+            if (rows.length > 1) {
+                removeBtn.style.display = 'block';
+            } else {
+                removeBtn.style.display = 'none';
+            }
+        });
+    }
+
+    function createSkillRow(index) {
+        const row = document.createElement('div');
+        row.className = 'skill-row mb-4 p-3 border rounded';
+        row.style.backgroundColor = '#f8f9fa';
+        row.innerHTML = `
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Skill Name <span class="text-danger">*</span></label>
+                    <input type="text" name="skill_names" class="form-control skill-input" placeholder="e.g., Python, Django, React" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Category <span class="text-danger">*</span></label>
+                    <select name="categories" class="form-select" required>
+                        <option value="">Select Category</option>
+                        <option value="PROGRAMMING">Programming Language</option>
+                        <option value="FRAMEWORK">Framework/Library</option>
+                        <option value="DATABASE">Database</option>
+                        <option value="TOOL">Tool/Software</option>
+                        <option value="LANGUAGE">Language</option>
+                        <option value="OTHER">Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Proficiency Level <span class="text-danger">*</span></label>
+                    <select name="proficiencies" class="form-select" required>
+                        <option value="">Select Level</option>
+                        <option value="BEGINNER">Beginner</option>
+                        <option value="INTERMEDIATE">Intermediate</option>
+                        <option value="ADVANCED">Advanced</option>
+                        <option value="EXPERT">Expert</option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Years of Experience <span class="text-danger">*</span></label>
+                    <input type="number" name="years_experiences" class="form-control" step="0.5" min="0" placeholder="0.5" required>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-sm btn-outline-danger remove-skill">Remove</button>
+            </div>
+        `;
+
+        const removeBtn = row.querySelector('.remove-skill');
+        removeBtn.addEventListener('click', function() {
+            row.remove();
+            updateRemoveButtons();
+        });
+
+        return row;
+    }
+
+    addSkillBtn.addEventListener('click', function() {
+        skillCount++;
+        const newRow = createSkillRow(skillCount);
+        skillsContainer.appendChild(newRow);
+        updateRemoveButtons();
+    });
+
+    // Handle remove buttons in initial row
+    const initialRemoveBtn = document.querySelector('.skill-row .remove-skill');
+    if (initialRemoveBtn) {
+        initialRemoveBtn.addEventListener('click', function() {
+            this.closest('.skill-row').remove();
+            updateRemoveButtons();
+        });
+    }
+
+    updateRemoveButtons();
+});
+</script>
 {% endblock %}

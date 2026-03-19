@@ -71,6 +71,18 @@
                                 <div class="text-danger small mt-1">{{ form.password2.errors }}</div>
                             {% endif %}
                         </div>
+
+                        <!-- CAPTCHA Field -->
+                        <div class="mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
+                            <label for="{{ form.captcha.id_for_label }}" class="form-label">
+                                <strong>🔒 {{ form.captcha.label }}</strong>
+                            </label>
+                            {{ form.captcha }}
+                            <small class="form-text text-muted d-block mt-2">This helps us verify you're human</small>
+                            {% if form.captcha.errors %}
+                                <div class="text-danger small mt-2">{{ form.captcha.errors }}</div>
+                            {% endif %}
+                        </div>
                         
                         <button type="submit" class="btn btn-primary w-100 mb-3">Sign Up</button>
                     </form>
@@ -85,4 +97,28 @@
         </div>
     </div>
 </div>
+
+<style>
+    .captcha-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .captcha-container .captcha {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .captcha-container img {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 3px;
+    }
+    
+    .captcha-container input {
+        max-width: 150px;
+    }
+</style>
 {% endblock %}

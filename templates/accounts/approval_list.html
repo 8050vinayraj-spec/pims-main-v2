@@ -1,149 +1,319 @@
 {% extends 'base.html' %}
 
-{% block title %}Account Approvals - PIMS{% endblock %}
+{% block title %}Approvals Management - PIMS{% endblock %}
 
-{% block page_title %}Account Approvals{% endblock %}
+{% block page_title %}Approvals Management{% endblock %}
 
 {% block content %}
-<div class="container">
-    <!-- Pending Approvals Tab -->
-    <h3 class="mb-4">
-        <span class="badge bg-warning">{{ pending_approvals|length }}</span> Pending Approvals
-    </h3>
-    
-    {% if pending_approvals %}
-        <div class="row">
-            {% for approval in pending_approvals %}
-                <div class="col-md-6 mb-4">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ approval.user.get_full_name|default:approval.user.username }}</h5>
-                            <p class="text-muted mb-2">
-                                <strong>Username:</strong> {{ approval.user.username }}
-                            </p>
-                            <p class="text-muted mb-2">
-                                <strong>Email:</strong> {{ approval.user.email }}
-                            </p>
-                            <p class="text-muted mb-3">
-                                <strong>Role:</strong> <span class="badge bg-info">{{ approval.user.get_role_display }}</span>
-                            </p>
-                            <p class="text-muted small mb-3">
-                                <strong>Applied:</strong> {{ approval.created_at|date:"M d, Y H:i" }}
-                            </p>
-                            
-                            <form method="POST" action="{% url 'accounts:officer_approval' %}">
-                                {% csrf_token %}
-                                <input type="hidden" name="approval_id" value="{{ approval.id }}">
-                                
-                                <div class="mb-3">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="action" id="approve_{{ approval.id }}" value="APPROVE" checked>
-                                        <label class="form-check-label" for="approve_{{ approval.id }}">
-                                            Approve
-                                        </label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="action" id="reject_{{ approval.id }}" value="REJECT">
-                                        <label class="form-check-label" for="reject_{{ approval.id }}">
-                                            Reject
-                                        </label>
-                                    </div>
+<div class="container-fluid">
+    <!-- ✅ NEW: Tab Navigation for Three Approval Types -->
+    <ul class="nav nav-tabs mb-4" id="approvalsTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="accounts-tab" data-bs-toggle="tab" data-bs-target="#accounts" type="button">
+                👤 Account Approvals
+                <span class="badge bg-warning">{{ pending_recruiters|length|add:pending_students|length }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="companies-tab" data-bs-toggle="tab" data-bs-target="#companies" type="button">
+                🏢 Company Verifications
+                <span class="badge bg-warning">{{ pending_companies|length }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="opportunities-tab" data-bs-toggle="tab" data-bs-target="#opportunities" type="button">
+                💼 Opportunity Approvals
+                <span class="badge bg-warning">{{ pending_opportunities|length }}</span>
+            </button>
+        </li>
+    </ul>
+
+    <!-- ✅ Tab Content -->
+    <div class="tab-content" id="approvalsTabContent">
+        
+        <!-- ==================== ACCOUNTS TAB ==================== -->
+        <div class="tab-pane fade show active" id="accounts" role="tabpanel">
+            <!-- Pending Recruiter Approvals -->
+            <h4 class="mb-4">
+                <span class="badge bg-warning">{{ pending_recruiters|length }}</span> Pending Recruiter Approvals
+            </h4>
+            
+            {% if pending_recruiters %}
+                <div class="row">
+                    {% for approval in pending_recruiters %}
+                        <div class="col-md-6 mb-4">
+                            <div class="card border-warning">
+                                <div class="card-header bg-warning text-dark">
+                                    <strong>🔗 Recruiter Account</strong>
                                 </div>
-                                
-                                <div class="mb-3" id="rejection_reason_{{ approval.id }}" style="display: none;">
-                                    <textarea name="rejection_reason" class="form-control" rows="3" placeholder="Reason for rejection"></textarea>
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ approval.user.get_full_name|default:approval.user.username }}</h5>
+                                    <p class="text-muted mb-2"><strong>Username:</strong> {{ approval.user.username }}</p>
+                                    <p class="text-muted mb-2"><strong>Email:</strong> {{ approval.user.email }}</p>
+                                    <p class="text-muted mb-3"><strong>Role:</strong> <span class="badge bg-info">{{ approval.user.get_role_display }}</span></p>
+                                    <p class="text-muted small mb-3"><strong>Applied:</strong> {{ approval.created_at|date:"M d, Y H:i" }}</p>
+                                    
+                                    <form method="POST" action="{% url 'accounts:officer_approval' %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="approval_id" value="{{ approval.id }}">
+                                        
+                                        <div class="mb-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="action" id="approve_{{ approval.id }}" value="APPROVE" checked>
+                                                <label class="form-check-label" for="approve_{{ approval.id }}">
+                                                    ✓ Approve
+                                                </label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="action" id="reject_{{ approval.id }}" value="REJECT">
+                                                <label class="form-check-label" for="reject_{{ approval.id }}">
+                                                    ✗ Reject
+                                                </label>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Company Selection for Recruiters -->
+                                        <div class="mb-3" id="company_section_{{ approval.id }}">
+                                            <label for="company_{{ approval.id }}" class="form-label">
+                                                <strong>🏢 Assign Company</strong> <span class="text-danger">*</span>
+                                            </label>
+                                            <select name="company" id="company_{{ approval.id }}" class="form-select" required>
+                                                <option value="">-- Select a Company --</option>
+                                                {% for company in companies %}
+                                                    <option value="{{ company.id }}">{{ company.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="mb-3" id="rejection_reason_{{ approval.id }}" style="display: none;">
+                                            <label for="rejection_reason_{{ approval.id }}" class="form-label">Reason for Rejection</label>
+                                            <textarea name="rejection_reason" id="rejection_reason_{{ approval.id }}" class="form-control" rows="3"></textarea>
+                                        </div>
+                                        
+                                        <button type="submit" class="btn btn-primary w-100">Submit Decision</button>
+                                    </form>
                                 </div>
-                                
-                                <button type="submit" class="btn btn-primary w-100">Submit Decision</button>
-                            </form>
+                            </div>
                         </div>
-                    </div>
+                        
+                        <script>
+                            document.getElementById('reject_{{ approval.id }}').addEventListener('change', function() {
+                                document.getElementById('rejection_reason_{{ approval.id }}').style.display = 'block';
+                                document.getElementById('company_section_{{ approval.id }}').style.display = 'none';
+                            });
+                            document.getElementById('approve_{{ approval.id }}').addEventListener('change', function() {
+                                document.getElementById('rejection_reason_{{ approval.id }}').style.display = 'none';
+                                document.getElementById('company_section_{{ approval.id }}').style.display = 'block';
+                            });
+                        </script>
+                    {% endfor %}
                 </div>
-                
-                <script>
-                    document.getElementById('reject_{{ approval.id }}').addEventListener('change', function() {
-                        document.getElementById('rejection_reason_{{ approval.id }}').style.display = 'block';
-                    });
-                    document.getElementById('approve_{{ approval.id }}').addEventListener('change', function() {
-                        document.getElementById('rejection_reason_{{ approval.id }}').style.display = 'none';
-                    });
-                </script>
-            {% endfor %}
-        </div>
-    {% else %}
-        <div class="alert alert-info">No pending approvals.</div>
-    {% endif %}
-    
-    <hr class="my-5">
-    
-    <!-- Approved Accounts -->
-    <h3 class="mb-4">
-        <span class="badge bg-success">{{ approved_approvals|length }}</span> Approved Accounts
-    </h3>
-    
-    {% if approved_approvals %}
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead class="table-light">
-                    <tr>
-                        <th>Name</th>
-                        <th>Username</th>
-                        <th>Role</th>
-                        <th>Approved By</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for approval in approved_approvals %}
-                        <tr>
-                            <td>{{ approval.user.get_full_name|default:approval.user.username }}</td>
-                            <td>{{ approval.user.username }}</td>
-                            <td><span class="badge bg-info">{{ approval.user.get_role_display }}</span></td>
-                            <td>{{ approval.approved_by.username|default:"System" }}</td>
-                            <td>{{ approval.updated_at|date:"M d, Y" }}</td>
-                        </tr>
+            {% else %}
+                <div class="alert alert-info">No pending recruiter approvals.</div>
+            {% endif %}
+            
+            <hr class="my-5">
+            
+            <!-- Pending Student Approvals -->
+            <h4 class="mb-4">
+                <span class="badge bg-warning">{{ pending_students|length }}</span> Pending Student Approvals
+            </h4>
+            
+            {% if pending_students %}
+                <div class="row">
+                    {% for approval in pending_students %}
+                        <div class="col-md-6 mb-4">
+                            <div class="card border-info">
+                                <div class="card-header bg-info text-white">
+                                    <strong>👨‍🎓 Student Account</strong>
+                                </div>
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ approval.user.get_full_name|default:approval.user.username }}</h5>
+                                    <p class="text-muted mb-2"><strong>Username:</strong> {{ approval.user.username }}</p>
+                                    <p class="text-muted mb-2"><strong>Email:</strong> {{ approval.user.email }}</p>
+                                    <p class="text-muted mb-3"><strong>Role:</strong> <span class="badge bg-primary">{{ approval.user.get_role_display }}</span></p>
+                                    <p class="text-muted small mb-3"><strong>Applied:</strong> {{ approval.created_at|date:"M d, Y H:i" }}</p>
+                                    
+                                    <form method="POST" action="{% url 'accounts:officer_approval' %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="approval_id" value="{{ approval.id }}">
+                                        
+                                        <div class="mb-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="action" id="approve_{{ approval.id }}" value="APPROVE" checked>
+                                                <label class="form-check-label" for="approve_{{ approval.id }}">
+                                                    ✓ Approve
+                                                </label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="action" id="reject_{{ approval.id }}" value="REJECT">
+                                                <label class="form-check-label" for="reject_{{ approval.id }}">
+                                                    ✗ Reject
+                                                </label>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3" id="rejection_reason_{{ approval.id }}" style="display: none;">
+                                            <label for="rejection_reason_{{ approval.id }}" class="form-label">Reason for Rejection</label>
+                                            <textarea name="rejection_reason" id="rejection_reason_{{ approval.id }}" class="form-control" rows="3"></textarea>
+                                        </div>
+                                        
+                                        <button type="submit" class="btn btn-primary w-100">Submit Decision</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <script>
+                            document.getElementById('reject_{{ approval.id }}').addEventListener('change', function() {
+                                document.getElementById('rejection_reason_{{ approval.id }}').style.display = 'block';
+                            });
+                            document.getElementById('approve_{{ approval.id }}').addEventListener('change', function() {
+                                document.getElementById('rejection_reason_{{ approval.id }}').style.display = 'none';
+                            });
+                        </script>
                     {% endfor %}
-                </tbody>
-            </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info">No pending student approvals.</div>
+            {% endif %}
         </div>
-    {% else %}
-        <div class="alert alert-info">No approved accounts yet.</div>
-    {% endif %}
-    
-    <hr class="my-5">
-    
-    <!-- Rejected Accounts -->
-    <h3 class="mb-4">
-        <span class="badge bg-danger">{{ rejected_approvals|length }}</span> Rejected Accounts
-    </h3>
-    
-    {% if rejected_approvals %}
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead class="table-light">
-                    <tr>
-                        <th>Name</th>
-                        <th>Username</th>
-                        <th>Role</th>
-                        <th>Reason</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for approval in rejected_approvals %}
-                        <tr>
-                            <td>{{ approval.user.get_full_name|default:approval.user.username }}</td>
-                            <td>{{ approval.user.username }}</td>
-                            <td><span class="badge bg-secondary">{{ approval.user.get_role_display }}</span></td>
-                            <td>{{ approval.rejection_reason|default:"No reason provided" }}</td>
-                            <td>{{ approval.updated_at|date:"M d, Y" }}</td>
-                        </tr>
+
+        <!-- ==================== COMPANIES TAB ==================== -->
+        <div class="tab-pane fade" id="companies" role="tabpanel">
+            <h4 class="mb-4">
+                <span class="badge bg-warning">{{ pending_companies|length }}</span> Pending Company Verifications
+            </h4>
+            
+            {% if pending_companies %}
+                <div class="row">
+                    {% for company_approval in pending_companies %}
+                        <div class="col-md-6 mb-4">
+                            <div class="card border-warning">
+                                <div class="card-header bg-warning text-dark">
+                                    <strong>🏢 Company Verification</strong>
+                                </div>
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ company_approval.company.name }}</h5>
+                                    <p class="text-muted mb-2"><strong>Website:</strong> <a href="{{ company_approval.company.website }}" target="_blank">{{ company_approval.company.website }}</a></p>
+                                    <p class="text-muted mb-2"><strong>Industry:</strong> {{ company_approval.company.get_industry_display }}</p>
+                                    <p class="text-muted mb-2"><strong>City:</strong> {{ company_approval.company.city|default:"N/A" }}</p>
+                                    <p class="text-muted mb-3"><strong>Description:</strong> {{ company_approval.company.description|truncatewords:20 }}</p>
+                                    <p class="text-muted small mb-3"><strong>Submitted:</strong> {{ company_approval.created_at|date:"M d, Y H:i" }}</p>
+                                    
+                                    <form method="POST" action="{% url 'accounts:officer_approval' %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="company_approval_id" value="{{ company_approval.id }}">
+                                        
+                                        <div class="mb-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="action" id="comp_approve_{{ company_approval.id }}" value="APPROVE" checked>
+                                                <label class="form-check-label" for="comp_approve_{{ company_approval.id }}">
+                                                    ✓ Verify
+                                                </label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="action" id="comp_reject_{{ company_approval.id }}" value="REJECT">
+                                                <label class="form-check-label" for="comp_reject_{{ company_approval.id }}">
+                                                    ✗ Reject
+                                                </label>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3" id="comp_rejection_reason_{{ company_approval.id }}" style="display: none;">
+                                            <label for="comp_rejection_reason_{{ company_approval.id }}" class="form-label">Reason for Rejection</label>
+                                            <textarea name="rejection_reason" id="comp_rejection_reason_{{ company_approval.id }}" class="form-control" rows="3"></textarea>
+                                        </div>
+                                        
+                                        <button type="submit" class="btn btn-primary w-100">Submit Decision</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <script>
+                            document.getElementById('comp_reject_{{ company_approval.id }}').addEventListener('change', function() {
+                                document.getElementById('comp_rejection_reason_{{ company_approval.id }}').style.display = 'block';
+                            });
+                            document.getElementById('comp_approve_{{ company_approval.id }}').addEventListener('change', function() {
+                                document.getElementById('comp_rejection_reason_{{ company_approval.id }}').style.display = 'none';
+                            });
+                        </script>
                     {% endfor %}
-                </tbody>
-            </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info">No pending company verifications.</div>
+            {% endif %}
         </div>
-    {% else %}
-        <div class="alert alert-info">No rejected accounts.</div>
-    {% endif %}
+
+        <!-- ==================== OPPORTUNITIES TAB ==================== -->
+        <div class="tab-pane fade" id="opportunities" role="tabpanel">
+            <h4 class="mb-4">
+                <span class="badge bg-warning">{{ pending_opportunities|length }}</span> Pending Opportunity Approvals
+            </h4>
+            
+            {% if pending_opportunities %}
+                <div class="row">
+                    {% for opp_approval in pending_opportunities %}
+                        <div class="col-md-6 mb-4">
+                            <div class="card border-warning">
+                                <div class="card-header bg-warning text-dark">
+                                    <strong>💼 Opportunity Review</strong>
+                                </div>
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ opp_approval.opportunity.title }}</h5>
+                                    <p class="text-muted mb-2"><strong>Company:</strong> {{ opp_approval.opportunity.company.name }}</p>
+                                    <p class="text-muted mb-2"><strong>Type:</strong> <span class="badge bg-secondary">{{ opp_approval.opportunity.get_type_display }}</span></p>
+                                    <p class="text-muted mb-2"><strong>Min CGPA:</strong> {{ opp_approval.opportunity.min_cgpa }}</p>
+                                    <p class="text-muted mb-2"><strong>CTC/Stipend:</strong> {{ opp_approval.opportunity.ctc_or_stipend }}</p>
+                                    <p class="text-muted mb-2"><strong>Deadline:</strong> {{ opp_approval.opportunity.deadline|date:"M d, Y" }}</p>
+                                    <p class="text-muted mb-3"><strong>Description:</strong> {{ opp_approval.opportunity.description|truncatewords:15 }}</p>
+                                    <p class="text-muted small mb-3"><strong>Submitted:</strong> {{ opp_approval.created_at|date:"M d, Y H:i" }}</p>
+                                    
+                                    <form method="POST" action="{% url 'accounts:officer_approval' %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="opportunity_approval_id" value="{{ opp_approval.id }}">
+                                        
+                                        <div class="mb-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="action" id="opp_approve_{{ opp_approval.id }}" value="APPROVE" checked>
+                                                <label class="form-check-label" for="opp_approve_{{ opp_approval.id }}">
+                                                    ✓ Publish
+                                                </label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="action" id="opp_reject_{{ opp_approval.id }}" value="REJECT">
+                                                <label class="form-check-label" for="opp_reject_{{ opp_approval.id }}">
+                                                    ✗ Reject
+                                                </label>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3" id="opp_rejection_reason_{{ opp_approval.id }}" style="display: none;">
+                                            <label for="opp_rejection_reason_{{ opp_approval.id }}" class="form-label">Reason for Rejection</label>
+                                            <textarea name="rejection_reason" id="opp_rejection_reason_{{ opp_approval.id }}" class="form-control" rows="3"></textarea>
+                                        </div>
+                                        
+                                        <button type="submit" class="btn btn-primary w-100">Submit Decision</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <script>
+                            document.getElementById('opp_reject_{{ opp_approval.id }}').addEventListener('change', function() {
+                                document.getElementById('opp_rejection_reason_{{ opp_approval.id }}').style.display = 'block';
+                            });
+                            document.getElementById('opp_approve_{{ opp_approval.id }}').addEventListener('change', function() {
+                                document.getElementById('opp_rejection_reason_{{ opp_approval.id }}').style.display = 'none';
+                            });
+                        </script>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info">No pending opportunities.</div>
+            {% endif %}
+        </div>
+    </div>
 </div>
 {% endblock %}

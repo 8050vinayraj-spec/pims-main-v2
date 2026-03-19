@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Opportunity, RequiredSkill
+from .models import Opportunity, RequiredSkill, OpportunityApproval
 
 
 class RequiredSkillInline(admin.TabularInline):
@@ -14,6 +14,15 @@ class OpportunityAdmin(admin.ModelAdmin):
 	search_fields = ['title', 'company__name']
 	readonly_fields = ['created_at', 'updated_at', 'published_at', 'closed_at']
 	inlines = [RequiredSkillInline]
+
+
+# ✅ NEW: Register OpportunityApproval
+@admin.register(OpportunityApproval)
+class OpportunityApprovalAdmin(admin.ModelAdmin):
+	list_display = ['opportunity', 'status', 'approved_by', 'created_at']
+	list_filter = ['status', 'created_at']
+	search_fields = ['opportunity__title', 'approved_by__username']
+	readonly_fields = ['created_at', 'updated_at']
 
 
 @admin.register(RequiredSkill)

@@ -30,16 +30,17 @@
                             {% endif %}
                         </div>
 
-                        <!-- reCAPTCHA Field (only if available) -->
-                        {% if form.captcha %}
-                        <div class="mb-4">
-                            <label for="{{ form.captcha.id_for_label }}" class="form-label">{{ form.captcha.label }}</label>
+                        <!-- CAPTCHA Field -->
+                        <div class="mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
+                            <label for="{{ form.captcha.id_for_label }}" class="form-label">
+                                <strong>🔒 {{ form.captcha.label }}</strong>
+                            </label>
                             {{ form.captcha }}
+                            <small class="form-text text-muted d-block mt-2">This helps us verify you're human</small>
                             {% if form.captcha.errors %}
                                 <div class="text-danger small mt-2">{{ form.captcha.errors }}</div>
                             {% endif %}
                         </div>
-                        {% endif %}
                         
                         <button type="submit" class="btn btn-primary w-100 mb-3">Login</button>
                     </form>

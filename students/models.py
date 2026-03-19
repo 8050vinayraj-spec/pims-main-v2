@@ -11,6 +11,59 @@ class StudentProfile(models.Model):
         ('CE', 'Civil Engineering'),
         ('IT', 'Information Technology'),
         ('EEE', 'Electrical & Electronics Engineering'),
+        ('OTHER', 'Other (Please specify)'),
+    ]
+
+    COUNTRY_CODES = [
+        ('+1', '+1 (United States)'),
+        ('+44', '+44 (United Kingdom)'),
+        ('+91', '+91 (India)'),
+        ('+86', '+86 (China)'),
+        ('+81', '+81 (Japan)'),
+        ('+33', '+33 (France)'),
+        ('+49', '+49 (Germany)'),
+        ('+39', '+39 (Italy)'),
+        ('+34', '+34 (Spain)'),
+        ('+61', '+61 (Australia)'),
+        ('+64', '+64 (New Zealand)'),
+        ('+27', '+27 (South Africa)'),
+        ('+55', '+55 (Brazil)'),
+        ('+52', '+52 (Mexico)'),
+        ('+1-888', '+1-888 (Canada)'),
+        ('+65', '+65 (Singapore)'),
+        ('+60', '+60 (Malaysia)'),
+        ('+66', '+66 (Thailand)'),
+        ('+62', '+62 (Indonesia)'),
+        ('+63', '+63 (Philippines)'),
+        ('+82', '+82 (South Korea)'),
+        ('+84', '+84 (Vietnam)'),
+        ('+90', '+90 (Turkey)'),
+        ('+966', '+966 (Saudi Arabia)'),
+        ('+971', '+971 (United Arab Emirates)'),
+        ('+212', '+212 (Morocco)'),
+        ('+234', '+234 (Nigeria)'),
+        ('+254', '+254 (Kenya)'),
+        ('+56', '+56 (Chile)'),
+        ('+54', '+54 (Argentina)'),
+        ('+57', '+57 (Colombia)'),
+        ('+51', '+51 (Peru)'),
+        ('+48', '+48 (Poland)'),
+        ('+31', '+31 (Netherlands)'),
+        ('+32', '+32 (Belgium)'),
+        ('+41', '+41 (Switzerland)'),
+        ('+43', '+43 (Austria)'),
+        ('+46', '+46 (Sweden)'),
+        ('+47', '+47 (Norway)'),
+        ('+45', '+45 (Denmark)'),
+        ('+358', '+358 (Finland)'),
+        ('+353', '+353 (Ireland)'),
+        ('+30', '+30 (Greece)'),
+        ('+36', '+36 (Hungary)'),
+        ('+420', '+420 (Czech Republic)'),
+        ('+421', '+421 (Slovakia)'),
+        ('+203', '+203 (Egypt)'),
+        ('+216', '+216 (Tunisia)'),
+        ('+213', '+213 (Algeria)'),
     ]
 
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='student_profile')
@@ -18,10 +71,12 @@ class StudentProfile(models.Model):
         default=0.0,
         validators=[MinValueValidator(0.0), MaxValueValidator(10.0)]
     )
-    branch = models.CharField(max_length=20, choices=BRANCH_CHOICES)
+    branch = models.CharField(max_length=50, choices=BRANCH_CHOICES)
+    custom_branch = models.CharField(max_length=100, blank=True, help_text='Enter your branch if "Other" is selected')
     year = models.IntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(4)]
     )
+    country_code = models.CharField(max_length=10, choices=COUNTRY_CODES, default='+91', blank=True)
     phone = models.CharField(max_length=15, blank=True)
     profile_image = models.ImageField(upload_to='profile_images/', blank=True, null=True)
     bio = models.TextField(blank=True)

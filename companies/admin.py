@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Company, RecruiterProfile, CompanyHistory
+from .models import Company, RecruiterProfile, CompanyHistory, CompanyApproval
 
 
 @admin.register(Company)
@@ -8,6 +8,15 @@ class CompanyAdmin(admin.ModelAdmin):
     list_filter = ('verified', 'industry', 'created_at')
     search_fields = ('name', 'website', 'city')
     readonly_fields = ('created_at', 'updated_at', 'verified_at')
+
+
+# ✅ NEW: Register CompanyApproval
+@admin.register(CompanyApproval)
+class CompanyApprovalAdmin(admin.ModelAdmin):
+    list_display = ('company', 'status', 'approved_by', 'created_at')
+    list_filter = ('status', 'created_at')
+    search_fields = ('company__name', 'approved_by__username')
+    readonly_fields = ('created_at', 'updated_at')
 
 
 @admin.register(RecruiterProfile)

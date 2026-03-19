@@ -9,6 +9,7 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('approval-pending/', views.approval_pending_view, name='approval_pending'),
     path('approvals/', views.officer_approval_view, name='officer_approval'),
+    path('delete-account/<int:user_id>/', views.delete_account_view, name='delete_account'),  # ✅ NEW
     path('', views.home_view, name='home'),
     path('login/', views.login_view, name='login'),
     path('login/', views.login_view, name='login')

@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import URLValidator
 
+
 class Company(models.Model):
     name = models.CharField(max_length=255, unique=True)
     website = models.URLField(validators=[URLValidator()])
@@ -38,6 +39,34 @@ class Company(models.Model):
 
     def __str__(self):
         return self.name
+
+
+# ✅ NEW: Company Approval Model
+class CompanyApproval(models.Model):
+    APPROVAL_STATUS = [
+        ('PENDING', 'Pending'),
+        ('APPROVED', 'Approved'),
+        ('REJECTED', 'Rejected'),
+    ]
+
+    company = models.OneToOneField(Company, on_delete=models.CASCADE, related_name='approval')
+    approved_by = models.ForeignKey(
+        'accounts.CustomUser',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='company_approvals_given'
+    )
+    status = models.CharField(max_length=20, choices=APPROVAL_STATUS, default='PENDING')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    rejection_reason = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.company.name} - {self.status}"
 
 
 class RecruiterProfile(models.Model):

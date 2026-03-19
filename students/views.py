@@ -109,7 +109,11 @@ def profile_view(request):
     if request.method == 'POST':
         form = StudentProfileForm(request.POST, request.FILES, instance=student)
         if form.is_valid():
-            form.save()
+            # Preserve CGPA if it's already set and disabled
+            profile = form.save(commit=False)
+            if student.cgpa > 0:
+                profile.cgpa = student.cgpa
+            profile.save()
             messages.success(request, 'Profile updated successfully!')
             return redirect('profile')
     else:
@@ -227,37 +231,76 @@ def skills_view(request):
 
 @login_required
 def add_skill_view(request):
-    if request.method == 'POST':
-        skill_id = request.POST.get('skill')
-        proficiency = request.POST.get('proficiency')
-        years_of_experience = request.POST.get('years_of_experience')
+    if request.user.role.upper() != 'STUDENT':
+        messages.error(request, 'You do not have access to this page.')
+        return redirect('home')
 
+    if request.method == 'POST':
         try:
             student = StudentProfile.objects.get(user=request.user)
         except StudentProfile.DoesNotExist:
             messages.error(request, "No student profile found for this user.")
             return redirect('students:skills')
 
-        if not skill_id:
-            messages.error(request, "Please select a skill.")
+        # Get arrays from form
+        skill_names = request.POST.getlist('skill_names')
+        categories = request.POST.getlist('categories')
+        proficiencies = request.POST.getlist('proficiencies')
+        years_experiences = request.POST.getlist('years_experiences')
+
+        if not skill_names:
+            messages.error(request, "Please add at least one skill.")
             return redirect('students:skills')
 
-        # Ensure the skill exists
-        skill = get_object_or_404(Skill, id=skill_id)
+        added_count = 0
+        duplicate_count = 0
+        error_messages = []
 
-        # Prevent duplicate skill entries
-        if StudentSkill.objects.filter(student=student, skill=skill).exists():
-            messages.error(request, "You already added this skill.")
-            return redirect('students:skills')
+        # Process each skill
+        for i, skill_name in enumerate(skill_names):
+            if not skill_name or not categories[i] or not proficiencies[i]:
+                continue
 
-        # Create new skill entry
-        StudentSkill.objects.create(
-            student=student,
-            skill=skill,
-            proficiency=proficiency,
-            years_of_experience=years_of_experience
-        )
-        messages.success(request, "Skill added successfully.")
+            try:
+                years_exp = float(years_experiences[i]) if years_experiences[i] else 0
+            except (ValueError, IndexError):
+                error_messages.append(f"Invalid experience value for {skill_name}")
+                continue
+
+            # Get or create the skill
+            skill, created = Skill.objects.get_or_create(
+                name=skill_name.strip(),
+                defaults={'category': categories[i]}
+            )
+
+            # Update category if skill already existed
+            if not created and skill.category != categories[i]:
+                skill.category = categories[i]
+                skill.save()
+
+            # Check if student already has this skill
+            if StudentSkill.objects.filter(student=student, skill=skill).exists():
+                duplicate_count += 1
+                continue
+
+            # Create new skill entry
+            StudentSkill.objects.create(
+                student=student,
+                skill=skill,
+                proficiency=proficiencies[i],
+                years_of_experience=years_exp
+            )
+            added_count += 1
+
+        # Show appropriate messages
+        if added_count > 0:
+            messages.success(request, f"Successfully added {added_count} skill(s)!")
+        if duplicate_count > 0:
+            messages.warning(request, f"{duplicate_count} skill(s) already exist in your profile.")
+        if error_messages:
+            for error in error_messages:
+                messages.error(request, error)
+
         return redirect('students:skills')
 
     return render(request, 'students/add_skill.html')

@@ -14,13 +14,16 @@
         </div>
     {% endif %}
 
-    <form method="post" enctype="multipart/form-data" class="card p-4 shadow-sm">
+    <form method="post" enctype="multipart/form-data" class="card p-4 shadow-sm" id="completeProfileForm">
         {% csrf_token %}
         
         <!-- Render form fields -->
         <div class="mb-3">
             {{ form.cgpa.label_tag }}
             {{ form.cgpa }}
+            <small class="form-text text-muted d-block mt-1">
+                Format: 0-10 with up to 5 decimal places (e.g., 9.12345)
+            </small>
             {% if form.cgpa.errors %}
                 <div class="text-danger">{{ form.cgpa.errors }}</div>
             {% endif %}
@@ -34,6 +37,15 @@
             {% endif %}
         </div>
 
+        <div class="mb-3" id="customBranchRow" style="display: none;">
+            <label class="form-label" for="customBranchInput">Please specify your branch name</label>
+            {{ form.custom_branch }}
+            <small class="form-text text-muted d-block mt-1">Enter your branch or program name</small>
+            {% if form.custom_branch.errors %}
+                <div class="text-danger">{{ form.custom_branch.errors }}</div>
+            {% endif %}
+        </div>
+
         <div class="mb-3">
             {{ form.year.label_tag }}
             {{ form.year }}
@@ -43,10 +55,17 @@
         </div>
 
         <div class="mb-3">
-            {{ form.phone.label_tag }}
-            {{ form.phone }}
+            <label class="form-label">Country Code & Phone</label>
+            <div class="input-group">
+                {{ form.country_code }}
+                {{ form.phone }}
+            </div>
+            <small class="form-text text-muted d-block mt-1">Select country code + enter 10 digits</small>
             {% if form.phone.errors %}
                 <div class="text-danger">{{ form.phone.errors }}</div>
+            {% endif %}
+            {% if form.country_code.errors %}
+                <div class="text-danger">{{ form.country_code.errors }}</div>
             {% endif %}
         </div>
 
@@ -69,4 +88,141 @@
         <button type="submit" class="btn btn-primary">Save Profile</button>
     </form>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const phoneInput = document.querySelector('input[name="phone"]');
+    const cgpaInput = document.querySelector('input[name="cgpa"]');
+    const branchSelect = document.querySelector('select[name="branch"]');
+    const customBranchRow = document.getElementById('customBranchRow');
+    const customBranchInput = document.getElementById('customBranchInput');
+
+    // Show/hide custom branch input based on selection
+    function toggleCustomBranchField() {
+        if (branchSelect && branchSelect.value === 'OTHER') {
+            if (customBranchRow) {
+                customBranchRow.style.display = 'block';
+            }
+            if (customBranchInput) {
+                customBranchInput.focus();
+            }
+        } else {
+            if (customBranchRow) {
+                customBranchRow.style.display = 'none';
+            }
+            if (customBranchInput) {
+                customBranchInput.value = '';
+            }
+        }
+    }
+
+    if (branchSelect) {
+        branchSelect.addEventListener('change', toggleCustomBranchField);
+        // Initial check on page load
+        toggleCustomBranchField();
+    }
+
+    // Phone number validation: allow only digits, max 10
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function(e) {
+            // Remove any non-digit characters
+            let value = this.value.replace(/\D/g, '');
+            
+            // Limit to 10 digits
+            if (value.length > 10) {
+                value = value.slice(0, 10);
+            }
+            
+            this.value = value;
+        });
+
+        phoneInput.addEventListener('keypress', function(e) {
+            // Only allow digits
+            if (!/\d/.test(e.key)) {
+                e.preventDefault();
+            }
+        });
+    }
+
+    // CGPA validation: allow decimal format with max 5 decimal places
+    if (cgpaInput) {
+        cgpaInput.addEventListener('input', function(e) {
+            let value = this.value;
+            
+            // Allow only digits and one decimal point
+            value = value.replace(/[^\d.]/g, '');
+            
+            // Ensure only one decimal point
+            const parts = value.split('.');
+            if (parts.length > 2) {
+                value = parts[0] + '.' + parts.slice(1).join('');
+            }
+            
+            // Limit decimal places to 5
+            if (parts.length === 2) {
+                if (parts[1].length > 5) {
+                    value = parts[0] + '.' + parts[1].slice(0, 5);
+                }
+            }
+            
+            this.value = value;
+        });
+
+        cgpaInput.addEventListener('change', function(e) {
+            let value = this.value;
+            
+            // Validate range (0-10)
+            if (value !== '') {
+                const num = parseFloat(value);
+                if (num < 0 || num > 10) {
+                    alert('CGPA must be between 0 and 10');
+                    this.value = '';
+                }
+            }
+        });
+    }
+
+    // Prevent form submission if values are invalid
+    const form = document.getElementById('completeProfileForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (cgpaInput && cgpaInput.value !== '') {
+                const num = parseFloat(cgpaInput.value);
+                if (num < 0 || num > 10) {
+                    e.preventDefault();
+                    alert('CGPA must be between 0 and 10');
+                    return false;
+                }
+                
+                // Validate decimal places
+                if (cgpaInput.value.includes('.')) {
+                    const decimals = cgpaInput.value.split('.')[1];
+                    if (decimals.length > 5) {
+                        e.preventDefault();
+                        alert('CGPA can have maximum 5 decimal places');
+                        return false;
+                    }
+                }
+            }
+
+            if (phoneInput && phoneInput.value !== '') {
+                if (phoneInput.value.length > 10 || !/^\d+$/.test(phoneInput.value)) {
+                    e.preventDefault();
+                    alert('Phone number must contain only digits and be maximum 10 digits');
+                    return false;
+                }
+            }
+
+            // Validate custom branch if OTHER is selected
+            if (branchSelect && branchSelect.value === 'OTHER') {
+                if (!customBranchInput || customBranchInput.value.trim() === '') {
+                    e.preventDefault();
+                    alert('Please specify your branch when selecting "Other"');
+                    return false;
+                }
+            }
+        });
+    }
+});
+</script>
 {% endblock %}
