@@ -111,19 +111,8 @@ def officer_dashboard_view(request):
 
 @login_required
 def officer_approval_view(request):
-    """Officer view to approve recruiters"""
-    if not (hasattr(request.user, 'role') and request.user.role == 'OFFICER'):
-        return HttpResponseForbidden("Only officers can access this.")
-
-    from accounts.models import AccountApproval
-    
-    pending_approvals = AccountApproval.objects.filter(status='PENDING').select_related('user')
-
-    context = {
-        'pending_approvals': pending_approvals,
-        'page_title': 'Recruiter Approvals',
-    }
-    return render(request, 'dashboard/officer_approval.html', context)
+    """Redirect to accounts approval view for complete approval management"""
+    return redirect('accounts:officer_approval')
 
 
 @login_required

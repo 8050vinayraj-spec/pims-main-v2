@@ -15,9 +15,21 @@
             </button>
         </li>
         <li class="nav-item" role="presentation">
+            <button class="nav-link" id="approved-accounts-tab" data-bs-toggle="tab" data-bs-target="#approved-accounts" type="button">
+                ✓ Approved Accounts
+                <span class="badge bg-success">{{ approved_approvals|length }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
             <button class="nav-link" id="companies-tab" data-bs-toggle="tab" data-bs-target="#companies" type="button">
                 🏢 Company Verifications
                 <span class="badge bg-warning">{{ pending_companies|length }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="approved-companies-tab" data-bs-toggle="tab" data-bs-target="#approved-companies" type="button">
+                ✓ Approved Companies
+                <span class="badge bg-success">{{ approved_companies|length }}</span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
@@ -179,6 +191,41 @@
             {% endif %}
         </div>
 
+        <!-- ==================== APPROVED ACCOUNTS TAB ==================== -->
+        <div class="tab-pane fade" id="approved-accounts" role="tabpanel">
+            <h4 class="mb-4">
+                <span class="badge bg-success">{{ approved_approvals|length }}</span> Approved Accounts
+            </h4>
+            
+            {% if approved_approvals %}
+                <div class="row">
+                    {% for approval in approved_approvals %}
+                        <div class="col-md-6 mb-4">
+                            <div class="card border-success">
+                                <div class="card-header bg-success text-white">
+                                    <strong>✓ {{ approval.user.get_role_display }} Account</strong>
+                                </div>
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ approval.user.get_full_name|default:approval.user.username }}</h5>
+                                    <p class="text-muted mb-2"><strong>Username:</strong> {{ approval.user.username }}</p>
+                                    <p class="text-muted mb-2"><strong>Email:</strong> {{ approval.user.email }}</p>
+                                    <p class="text-muted mb-2"><strong>Role:</strong> <span class="badge bg-primary">{{ approval.user.get_role_display }}</span></p>
+                                    <p class="text-muted mb-2"><strong>Status:</strong> <span class="badge bg-success">Approved</span></p>
+                                    {% if approval.user.company %}
+                                        <p class="text-muted mb-2"><strong>Company:</strong> {{ approval.user.company.name }}</p>
+                                    {% endif %}
+                                    <p class="text-muted small mb-3"><strong>Approved on:</strong> {{ approval.updated_at|date:"M d, Y H:i" }}</p>
+                                    <p class="text-muted small mb-3"><strong>Approved by:</strong> {{ approval.approved_by.get_full_name }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info">No approved accounts yet.</div>
+            {% endif %}
+        </div>
+
         <!-- ==================== COMPANIES TAB ==================== -->
         <div class="tab-pane fade" id="companies" role="tabpanel">
             <h4 class="mb-4">
@@ -243,6 +290,39 @@
                 </div>
             {% else %}
                 <div class="alert alert-info">No pending company verifications.</div>
+            {% endif %}
+        </div>
+
+        <!-- ==================== APPROVED COMPANIES TAB ==================== -->
+        <div class="tab-pane fade" id="approved-companies" role="tabpanel">
+            <h4 class="mb-4">
+                <span class="badge bg-success">{{ approved_companies|length }}</span> Approved Companies
+            </h4>
+            
+            {% if approved_companies %}
+                <div class="row">
+                    {% for company_approval in approved_companies %}
+                        <div class="col-md-6 mb-4">
+                            <div class="card border-success">
+                                <div class="card-header bg-success text-white">
+                                    <strong>✓ Verified Company</strong>
+                                </div>
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ company_approval.company.name }}</h5>
+                                    <p class="text-muted mb-2"><strong>Website:</strong> <a href="{{ company_approval.company.website }}" target="_blank">{{ company_approval.company.website }}</a></p>
+                                    <p class="text-muted mb-2"><strong>Industry:</strong> {{ company_approval.company.get_industry_display }}</p>
+                                    <p class="text-muted mb-2"><strong>City:</strong> {{ company_approval.company.city|default:"N/A" }}</p>
+                                    <p class="text-muted mb-2"><strong>Description:</strong> {{ company_approval.company.description|truncatewords:20 }}</p>
+                                    <p class="text-muted mb-2"><strong>Status:</strong> <span class="badge bg-success">Verified</span></p>
+                                    <p class="text-muted small mb-3"><strong>Verified on:</strong> {{ company_approval.updated_at|date:"M d, Y H:i" }}</p>
+                                    <p class="text-muted small mb-3"><strong>Verified by:</strong> {{ company_approval.approved_by.get_full_name }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info">No approved companies yet.</div>
             {% endif %}
         </div>
 

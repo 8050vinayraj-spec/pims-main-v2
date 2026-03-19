@@ -17,10 +17,7 @@
         </div>
         <div class="col-md-4 text-end">
             {% if can_manage %}
-                {% if opportunity.status == 'DRAFT' %}
-                    <a href="{% url 'opportunities:publish_opportunity' opportunity_id=opportunity.id %}" class="btn btn-success">Publish</a>
-                    <a href="{% url 'opportunities:edit_opportunity' opportunity_id=opportunity.id %}" class="btn btn-warning">Edit</a>
-                {% elif opportunity.status == 'PUBLISHED' %}
+                {% if opportunity.status == 'PUBLISHED' %}
                     <a href="{% url 'opportunities:edit_opportunity' opportunity_id=opportunity.id %}" class="btn btn-warning">Edit</a>
                     <a href="{% url 'opportunities:close_opportunity' opportunity_id=opportunity.id %}" class="btn btn-danger">Close</a>
                 {% endif %}

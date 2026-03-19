@@ -78,7 +78,7 @@ def complete_profile_view(request):
     try:
         _ = request.user.student_profile
         messages.info(request, "Profile already exists.")
-        return redirect('dashboard:student_dashboard')
+        return redirect('dashboard:student-dashboard')
     except StudentProfile.DoesNotExist:
         if request.method == "POST":
             form = StudentProfileForm(request.POST, request.FILES)
@@ -87,7 +87,7 @@ def complete_profile_view(request):
                 profile.user = request.user
                 profile.save()
                 messages.success(request, "Profile created successfully!")
-                return redirect('dashboard:student_dashboard')
+                return redirect('dashboard:student-dashboard')
         else:
             form = StudentProfileForm()
 

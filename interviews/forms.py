@@ -8,10 +8,9 @@ class InterviewRoundForm(forms.ModelForm):
     
     class Meta:
         model = InterviewRound
-        fields = ['name', 'order', 'description', 'duration_minutes']
+        fields = ['name', 'description', 'duration_minutes']
         widgets = {
             'name': forms.Select(attrs={'class': 'form-select'}),
-            'order': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Enter round description'}),
             'duration_minutes': forms.NumberInput(attrs={'class': 'form-control', 'min': 15}),
         }

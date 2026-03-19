@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpResponseForbidden
-from django.db.models import Q
+from django.db.models import Q, Max
 from students.models import StudentProfile
 from opportunities.models import Opportunity
 from applications.models import Application
@@ -27,6 +27,9 @@ def interview_rounds_view(request, opportunity_id):
         if form.is_valid():
             round = form.save(commit=False)
             round.opportunity = opportunity
+            # ✅ Auto-assign next order number
+            max_order = InterviewRound.objects.filter(opportunity=opportunity).aggregate(Max('order'))['order__max'] or 0
+            round.order = max_order + 1
             round.save()
             messages.success(request, f"Interview round '{round.get_name_display()}' created successfully.")
             return redirect('interviews:interview-rounds', opportunity_id=opportunity.id)

@@ -100,9 +100,10 @@ def create_opportunity_view(request):
         if form.is_valid():
             opportunity = form.save(commit=False)
             opportunity.company = request.user.company
-            opportunity.status = 'DRAFT'
+            opportunity.status = 'PUBLISHED'
+            opportunity.published_at = now()
             opportunity.save()
-            messages.success(request, 'Opportunity created in draft mode.')
+            messages.success(request, 'Opportunity published successfully and is now visible to all students!')
             return redirect('opportunities:opportunity_detail', opportunity_id=opportunity.id)
     else:
         form = OpportunityForm()
